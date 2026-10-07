@@ -1,7 +1,9 @@
 pnpm-lock.yaml
 pnpm-workspace.yaml
 node_modules/
+# Local, gitignored process notes (task tracking); not part of the deliverable.
 odd/
+# Private source material; never formatted, never committed.
 .private/
 coverage/
 .expo/

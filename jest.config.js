@@ -5,7 +5,14 @@ module.exports = {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
   testPathIgnorePatterns: ["/node_modules/", "<rootDir>/e2e/"],
+  // Only packages that ship untranspiled ESM/Flow and are actually installed here.
+  // `nodeLinker: hoisted` places them at the top of node_modules, so the `.pnpm`
+  // alternative used by jest-expo's default (for the isolated linker, where real
+  // paths live under node_modules/.pnpm/<pkg>@<ver>/node_modules/<pkg>) is not needed.
+  // Add a package here only when a test fails with a "SyntaxError: Cannot use import".
   transformIgnorePatterns: [
-    "node_modules/(?!(.pnpm|(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg))",
+    "/node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*))",
+    // Kept from jest-expo's defaults: the RN babel preset is part of the transformer itself.
+    "/node_modules/@react-native/babel-preset/",
   ],
 };
