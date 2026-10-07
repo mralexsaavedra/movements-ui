@@ -22,7 +22,7 @@ Test it if a regression would show wrong money, hide information, or break navig
 | DTO → domain mapper                    | Field renames silently break UI       | high     |
 | `ItemCard` states + a11y label         | Core visual contract                  | required |
 | Infinite query / controller pagination | Cursor bugs = duplicated/missing rows | high     |
-| Token resolver (aliases, cycles)       | Design-system contract                | medium   |
+| Theme modes parity + WCAG contrast     | Design-system contract                | medium   |
 
 Do NOT test: StyleSheet values, library internals, snapshot of whole trees.
 
