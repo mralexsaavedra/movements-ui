@@ -19,7 +19,7 @@ The deliverable is a public GitHub repo + README that defends trade-offs.
 - NEVER name the client, bank, or hiring company in code, commits, docs, or stories.
 - NEVER commit the exercise statement or the job offer (PDFs or copies). Paraphrase, never quote verbatim.
 - Mock data uses fictional merchants and people only.
-
+- The original exercise statement and job offer live in `.private/` (gitignored, present only on the owner's Mac and the apps agent host). Read them before planning a task; never copy, move, or `git add -f` them.
 ## Expo has changed — do not trust your training data
 
 Expo ships breaking changes every SDK release. Before touching any Expo, EAS, or React Native API:

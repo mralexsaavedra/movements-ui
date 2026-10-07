@@ -42,3 +42,6 @@ yarn-error.*
 
 # local workflow notes
 odd/
+
+# private source material (exercise statement, job offer) — never commit
+.private/
