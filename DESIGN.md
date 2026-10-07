@@ -168,8 +168,10 @@ Decisions:
   `"summary"` when not pressable); inner texts and the avatar are not separate stops.
 - **Label template**: `{direction}, {name}, {sign word} {amount spoken}, {status?}, {attention?}, {date}`
   — e.g. "Incoming, Acme Payroll, plus 1.250,00 euros, pending, needs attention, 3 October".
-- **Contrast**: text ≥ 4.5:1, non-text indicators (accent border, icon) ≥ 3:1, in both themes;
-  enforced by a token test.
+- **Contrast**: text ≥ 4.5:1 (WCAG 1.4.3); non-text indicators ≥ 3:1 (WCAG 1.4.11) —
+  `itemCard.flaggedAccentColor` against the card and the screen background, and
+  `itemCard.flagIconColor` against the card — in both themes; enforced by `buildTheme.test.ts`.
+  The decorative hairline card border (`itemCard.borderColor`) is exempt.
 - **Font scaling**: see Typography; layout tested at 200 %.
 - **Touch targets**: ≥ 44 × 44 dp (`size.touchTarget`).
 

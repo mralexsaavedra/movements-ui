@@ -120,4 +120,17 @@ describe("buildTheme", () => {
       expect([name, contrast(foreground, background) >= 4.5]).toEqual([name, true]);
     }
   });
+
+  it.each(modes)("meets WCAG 1.4.11 non-text contrast (3:1) for indicators in %s mode", (mode) => {
+    const { color, itemCard } = buildTheme(mode);
+    const pairs: readonly (readonly [string, string, string])[] = [
+      ["flagged accent on card", itemCard.flaggedAccentColor, itemCard.background],
+      ["flagged accent on screen", itemCard.flaggedAccentColor, color.background.default],
+      ["flag icon on card", itemCard.flagIconColor, itemCard.background],
+    ];
+
+    for (const [name, foreground, background] of pairs) {
+      expect([name, contrast(foreground, background) >= 3]).toEqual([name, true]);
+    }
+  });
 });
