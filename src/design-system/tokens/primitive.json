@@ -1,5 +1,4 @@
 {
-  "$description": "Primitive layer: raw values with no meaning. Only semantic tokens may alias these.",
   "color": {
     "neutral": {
       "0": {

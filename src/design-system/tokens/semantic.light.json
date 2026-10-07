@@ -1,5 +1,4 @@
 {
-  "$description": "Semantic color layer, light theme. Must expose exactly the same keys as the other theme.",
   "color": {
     "background": {
       "default": {

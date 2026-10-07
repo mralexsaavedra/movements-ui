@@ -3,10 +3,11 @@ import primitive from "../tokens/primitive.json";
 import semantic from "../tokens/semantic.json";
 import semanticLight from "../tokens/semantic.light.json";
 import { buildTheme } from "./buildTheme";
-import { flattenTokens } from "./resolveTokens";
-import type { TokenGroup } from "./resolveTokens";
 
 type Leaves = Record<string, unknown>;
+interface TokenGroup {
+  readonly [key: string]: unknown;
+}
 
 const leaves = (node: unknown, prefix = "", out: Leaves = {}): Leaves => {
   if (typeof node !== "object" || node === null) {
@@ -19,16 +20,26 @@ const leaves = (node: unknown, prefix = "", out: Leaves = {}): Leaves => {
   return out;
 };
 
-/** `$type` of every token, from the source JSON (DTCG metadata the theme drops). */
-const tokenTypes = (group: TokenGroup, prefix = "", out: Record<string, string> = {}) => {
+/** Flattens source DTCG JSON into `path -> token` (the generated theme drops `$type`). */
+const sourceTokens = (
+  group: TokenGroup,
+  prefix = "",
+  out: Map<string, { readonly $value: unknown; readonly $type: unknown }> = new Map(),
+) => {
   for (const [key, node] of Object.entries(group)) {
-    if (key.startsWith("$") || typeof node !== "object") continue;
+    if (key.startsWith("$") || typeof node !== "object" || node === null) continue;
     const path = prefix ? `${prefix}.${key}` : key;
-    if ("$value" in node) out[path] = String(node.$type);
-    else tokenTypes(node as TokenGroup, path, out);
+    if ("$value" in node && "$type" in node) out.set(path, node);
+    else sourceTokens(node as TokenGroup, path, out);
   }
   return out;
 };
+const tokenTypes = (...groups: readonly TokenGroup[]) =>
+  Object.fromEntries(
+    groups.flatMap((group) =>
+      [...sourceTokens(group)].map(([path, token]) => [path, String(token.$type)]),
+    ),
+  );
 
 // WCAG 2.x relative luminance / contrast ratio.
 const luminance = (hex: string) => {
@@ -63,8 +74,7 @@ describe("buildTheme", () => {
   });
 
   it("matches each value kind to its DTCG $type", () => {
-    const types = tokenTypes(semantic);
-    Object.assign(types, tokenTypes(semanticLight), tokenTypes(component));
+    const types = tokenTypes(semantic, semanticLight, component);
     const numeric = new Set(["dimension", "duration", "number"]);
 
     for (const [path, value] of Object.entries(leaves(buildTheme("light")))) {
@@ -85,11 +95,11 @@ describe("buildTheme", () => {
   });
 
   it("makes component tokens alias semantic tokens only, never primitives", () => {
-    const semanticPaths = flattenTokens(semantic, flattenTokens(semanticLight));
-    const primitivePaths = flattenTokens(primitive);
+    const semanticPaths = new Map([...sourceTokens(semantic), ...sourceTokens(semanticLight)]);
+    const primitivePaths = sourceTokens(primitive);
 
-    for (const [path, value] of flattenTokens(component)) {
-      const reference = String(value).slice(1, -1);
+    for (const [path, { $value }] of sourceTokens(component)) {
+      const reference = String($value).slice(1, -1);
       expect([path, semanticPaths.has(reference)]).toEqual([path, true]);
       expect([path, primitivePaths.has(reference)]).toEqual([path, false]);
     }

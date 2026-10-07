@@ -25,13 +25,16 @@ describe("useTheme", () => {
   });
 
   it("throws a descriptive error outside ThemeProvider", async () => {
+    // React logs the render error; silence it, and restore even when the assertion fails.
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
 
-    await expect(renderHook(() => useTheme())).rejects.toThrow(
-      "useTheme must be used within a ThemeProvider",
-    );
-
-    consoleError.mockRestore();
+    try {
+      await expect(renderHook(() => useTheme())).rejects.toThrow(
+        "useTheme must be used within a ThemeProvider",
+      );
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 
   it("returns the dark theme when mode is dark, even under a light system scheme", async () => {

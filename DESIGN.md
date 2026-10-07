@@ -40,7 +40,7 @@ space.4           spacing.md                  itemCard.paddingHorizontal
   the semantic layer; components that skipped it would silently keep the old value.
   A test enforces that component tokens alias semantic tokens only.
 - **Format**: W3C Design Tokens Community Group (DTCG) — `$value`, `$type`, aliases as
-  `{path.to.token}`. Aliases may chain; unknown references and cycles fail the build/tests.
+  `{path.to.token}`. Aliases may chain; unknown references and collisions fail the token build.
 - **Units (deviation)**: DTCG `dimension` and `duration` values are formally unit-bearing
   (`"16px"`, `"250ms"`). We store **unitless numbers** because React Native styles use
   density-independent pixels (dp) and animation APIs take milliseconds. Any export to web tooling
@@ -48,11 +48,28 @@ space.4           spacing.md                  itemCard.paddingHorizontal
 - **Themes**: `semantic.json` holds mode-independent intent (spacing, radius, typography, motion).
   `semantic.light.json` and `semantic.dark.json` remap the same `color.*` keys onto the same
   primitives. Light and dark must expose identical keys (checked at compile time and in tests).
-- **Typed theme**: tokens are resolved once per mode into a frozen object typed by a hand-written
-  `Theme` interface. JSON imports widen every `$value` to `string`, so a type derived from JSON
-  would type `itemCard.paddingHorizontal` (an alias string) as `string` instead of `number`.
-  The interface keeps precise value types (numbers, RN font weights); a compile-time assertion
-  keeps its keys identical to the JSON, and a test checks every value kind against its `$type`.
+- **Pipeline (build time)**:
+
+  ```
+  tokens/*.json (DTCG) ──► Style Dictionary (`pnpm tokens`) ──► tokens/generated/{light,dark}.ts ──► ThemeProvider
+  ```
+
+  `scripts/build-tokens.mjs` runs [Style Dictionary](https://styledictionary.com) once per mode
+  (`primitive` as alias scope only; `semantic` + `semantic.<mode>` + `component` as output) and
+  writes a nested `export const lightTokens = { ... } as const` module, formatted with Prettier.
+  No value transforms run, so the unitless convention above survives. Generated files are
+  committed, so Metro, Jest and `tsc` need no pre-step and reviewers can read the resolved values;
+  `pnpm tokens:check` (pre-push and lint-staged) fails when they are stale.
+
+- **Why build time, not runtime**: resolving aliases in the app means shipping and testing a
+  bespoke resolver, and JSON imports widen every `$value` to `string`, which forced a hand-written
+  `Theme` interface kept in sync by type-level checks. Generated code has exact literal types, so
+  `Theme` is derived from it (`typeof lightTokens`, widened so both modes share one type), and
+  Style Dictionary is the standard tool a design-system team already knows. **Terrazzo** (DTCG
+  native) was considered; Style Dictionary won on ecosystem maturity and familiarity.
+- **Typed theme**: `buildTheme(mode)` returns the generated tokens plus `mode`, deeply frozen.
+  A compile-time assertion keeps the light and dark modules identical in shape; a test checks
+  every value kind against its source `$type` and WCAG contrast in both modes.
 
 ## 4. Foundations
 

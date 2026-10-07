@@ -59,13 +59,14 @@ Always add native-aware deps with `npx expo install <pkg>` (resolves SDK-compati
 | Lint          | `pnpm lint` (`oxlint`)                           | ready      |
 | Format        | `pnpm format` / `pnpm format:check` (Prettier)   | ready      |
 | Typecheck     | `pnpm typecheck` (`tsc --noEmit`)                | ready      |
+| Tokens        | `pnpm tokens` / `pnpm tokens:check`              | ready      |
 | Test          | `pnpm test` / `pnpm test:watch` / `pnpm test:ci` | ready      |
 | Storybook     | `pnpm storybook`                                 | TODO (T07) |
 | E2E           | `pnpm e2e` (`maestro test e2e/`)                 | TODO (T09) |
 | Doctor        | `npx expo-doctor`                                | ready      |
 
 Run lint, typecheck and tests before declaring any task done. Husky runs lint-staged on
-pre-commit and `pnpm typecheck && pnpm test:ci` on pre-push.
+pre-commit and `pnpm tokens:check && pnpm typecheck && pnpm test:ci` on pre-push.
 
 ## Architecture
 
@@ -108,6 +109,8 @@ injection (provider/context), never instantiating adapters inside components.
 - `DESIGN.md` is the authored design spec (no design or token file was provided); tokens implement it.
 - Tokens live in `src/design-system/tokens/*.json` using the W3C Design Tokens (DTCG) format:
   `primitive.json`, `semantic.json`, `semantic.{light,dark}.json`, `component.json`.
+  Style Dictionary (`pnpm tokens`) generates `tokens/generated/{light,dark}.ts`; never edit those
+  by hand, regenerate and commit them with the JSON change.
 - Theme API: `ThemeProvider` (follows the system scheme, `mode` overrides) and `useTheme()` from
   `@/design-system/theme`; `Theme` is a typed, frozen object per mode.
 - Three layers: **primitive** (raw palette/scale) → **semantic** (intent: `color.text.positive`) → **component** (`itemCard.padding`).

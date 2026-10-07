@@ -1,4 +1,5 @@
 {
   "*.{ts,tsx}": ["oxlint --fix", "prettier --write"],
-  "*.{js,cjs,json,md,yml,yaml}": "prettier --write"
+  "*.{js,cjs,mjs,json,md,yml,yaml}": "prettier --write",
+  "src/design-system/tokens/*.json": "node scripts/build-tokens.mjs --check"
 }

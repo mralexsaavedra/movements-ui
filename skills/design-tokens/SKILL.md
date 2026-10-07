@@ -26,7 +26,8 @@ Files in `src/design-system/tokens/`: `primitive.json`, `semantic.json` (mode-in
 spacing, radius, size, typography, motion, opacity), `semantic.light.json` + `semantic.dark.json`
 (the same `color.*` keys remapped per mode), `component.json` (`itemCard`, `badge`, `skeleton`).
 Each token has `$value` and `$type`; references use `{path.to.token}`. Component tokens alias
-semantic tokens only (a test enforces it).
+semantic tokens only (a test enforces it). No root-level `$description`: Style Dictionary merges
+the files and reports it as a collision.
 
 ```json
 // primitive.json
@@ -68,19 +69,20 @@ pixels) and milliseconds. The deviation is documented in `DESIGN.md` §3.
 
 ## Typed Theme
 
+Pipeline: DTCG JSON → Style Dictionary (`pnpm tokens`, `scripts/build-tokens.mjs`) →
+`src/design-system/tokens/generated/{light,dark}.ts` (committed, `as const`, "do not edit") → theme.
+
 `src/design-system/theme/`:
 
-| File                | Role                                                                       |
-| ------------------- | -------------------------------------------------------------------------- |
-| `resolveTokens.ts`  | Pure: flattens DTCG, resolves chained aliases, throws on unknown/cycle/dup |
-| `Theme.ts`          | Hand-written `Theme` interface + compile-time key contract with the JSON   |
-| `buildTheme.ts`     | `buildTheme(mode)` → frozen `Theme` (semantic + component, no primitives)  |
-| `ThemeProvider.tsx` | Follows `useColorScheme()`; `mode` prop overrides (stories, tests)         |
-| `useTheme.ts`       | Returns the theme; throws outside `ThemeProvider`                          |
+| File                | Role                                                                         |
+| ------------------- | ---------------------------------------------------------------------------- |
+| `Theme.ts`          | `Theme` = widened `typeof lightTokens` + `mode`; asserts dark has same shape |
+| `buildTheme.ts`     | `buildTheme(mode)` → deeply frozen generated tokens (no primitives)          |
+| `ThemeProvider.tsx` | Follows `useColorScheme()`; `mode` prop overrides (stories, tests)           |
+| `useTheme.ts`       | Returns the theme; throws outside `ThemeProvider`                            |
 
-Why an interface and not `typeof json`: JSON imports widen `$value` to `string`, so aliases that
-resolve to numbers would be mistyped. `ThemeMatchesTokens` in `Theme.ts` fails compilation when
-JSON and interface keys drift; `buildTheme.test.ts` checks value kinds against `$type`.
+Never edit `generated/*.ts`. `pnpm tokens:check` (pre-push, lint-staged on token JSON) fails when
+they are stale; Style Dictionary fails the build on unknown references and token collisions.
 
 ```tsx
 import { ThemeProvider, useTheme } from "@/design-system/theme";
@@ -121,6 +123,6 @@ const styles = useMemo(() => style(theme), [theme]);
 3. Add/reuse a **semantic** token expressing intent; colors go in **both** `semantic.light.json`
    and `semantic.dark.json`.
 4. If only one component needs it, add a **component** token aliasing the semantic one.
-5. Add the key to the `Theme` interface (typecheck fails until you do).
+5. Run `pnpm tokens` and commit the JSON together with `generated/*.ts` (`Theme` updates itself).
 6. Consume it via `theme.*` in `X.style.ts`; typecheck catches wrong paths.
 7. Update the Storybook token story if one exists.

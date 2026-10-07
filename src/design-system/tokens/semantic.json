@@ -1,5 +1,4 @@
 {
-  "$description": "Mode-independent semantic layer (intent). Colors live in semantic.light.json / semantic.dark.json.",
   "spacing": {
     "none": {
       "$value": "{space.0}",

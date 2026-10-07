@@ -1,5 +1,4 @@
 {
-  "$description": "Component layer. Aliases semantic tokens only (enforced by buildTheme.test.ts).",
   "itemCard": {
     "background": {
       "$value": "{color.surface.default}",
