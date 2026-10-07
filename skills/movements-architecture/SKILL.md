@@ -36,13 +36,10 @@ Repository implementations are injected through a provider so tests/stories can 
 
 ```ts
 // domain/MovementRepository.ts
-import type { MovementPage } from "./Movement";
+import type { MovementsPage } from "./Movement";
 
 export interface MovementRepository {
-  readonly list: (params: {
-    readonly cursor?: string;
-    readonly limit: number;
-  }) => Promise<MovementPage>;
+  readonly getMovements: (params: GetMovementsParams) => Promise<MovementsPage>;
 }
 ```
 
