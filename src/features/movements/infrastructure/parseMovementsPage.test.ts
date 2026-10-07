@@ -85,6 +85,20 @@ describe("parseMovementsPage", () => {
     expect(JSON.stringify(reportInvalidItem.mock.calls)).not.toContain("98765");
   });
 
+  it("keeps parsing when the reporter throws (reporting is best-effort)", () => {
+    const reporter = {
+      reportInvalidItem: () => {
+        throw new Error("reporter down");
+      },
+    };
+    const raw = { items: [itemDtos[0], { id: "mv-bad" }, itemDtos[1]], nextCursor: null };
+
+    const page = parseMovementsPage(raw, reporter);
+
+    expect(page.items.map((m) => m.id)).toEqual([itemDtos[0].id, itemDtos[1].id]);
+    expect(page.invalidCount).toBe(1);
+  });
+
   it("reports a null id when the invalid item has no readable id", () => {
     const { reporter, reportInvalidItem } = createReporter();
 

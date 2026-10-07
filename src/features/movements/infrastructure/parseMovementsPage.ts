@@ -39,11 +39,15 @@ export const parseMovementsPage = (
       return;
     }
     invalidCount += 1;
-    reporter.reportInvalidItem({
-      index,
-      id: readableId(rawItem),
-      issues: toContractIssues(item.error),
-    });
+    try {
+      reporter.reportInvalidItem({
+        index,
+        id: readableId(rawItem),
+        issues: toContractIssues(item.error),
+      });
+    } catch {
+      // Reporting is best-effort: a failing reporter must not turn a dropped item into a failed page.
+    }
   });
 
   return { items, nextCursor: envelope.data.nextCursor, invalidCount };

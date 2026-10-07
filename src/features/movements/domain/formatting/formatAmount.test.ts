@@ -25,6 +25,18 @@ describe("formatAmount", () => {
     },
   );
 
+  it.each([
+    [0.004, "EUR", "0,00 €"],
+    [0.4, "JPY", "0 JPY"],
+  ])("shows %d %s, which rounds to zero, without a sign", (value, currency, expected) => {
+    expect(normalizeSpaces(formatAmount({ value, currency }, "outbound"))).toBe(expected);
+    expect(normalizeSpaces(formatAmount({ value, currency }, "inbound"))).toBe(expected);
+  });
+
+  it("signs an amount that rounds up to the smallest unit", () => {
+    expect(normalizeSpaces(formatAmount(eur(0.005), "outbound"))).toBe("\u22120,01 €");
+  });
+
   it("groups thousands with the es-ES separator for five-digit values", () => {
     expect(normalizeSpaces(formatAmount(eur(12345.5), "inbound"))).toBe("+12.345,50 €");
   });
@@ -58,6 +70,10 @@ describe("formatAmountForAccessibility", () => {
 
   it("speaks a zero amount without a sign word", () => {
     expect(normalizeSpaces(formatAmountForAccessibility(eur(0), "outbound"))).toBe("0,00 euros");
+  });
+
+  it("speaks an amount that rounds to zero without a sign word", () => {
+    expect(normalizeSpaces(formatAmountForAccessibility(eur(0.004), "inbound"))).toBe("0,00 euros");
   });
 
   it("accepts a locale and custom sign words", () => {
