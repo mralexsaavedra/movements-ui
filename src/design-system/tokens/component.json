@@ -1,0 +1,145 @@
+{
+  "$description": "Component layer. Aliases semantic tokens only (enforced by buildTheme.test.ts).",
+  "itemCard": {
+    "background": {
+      "$value": "{color.surface.default}",
+      "$type": "color"
+    },
+    "borderColor": {
+      "$value": "{color.border.default}",
+      "$type": "color"
+    },
+    "borderWidth": {
+      "$value": "{borderWidth.hairline}",
+      "$type": "dimension"
+    },
+    "radius": {
+      "$value": "{radius.lg}",
+      "$type": "dimension"
+    },
+    "paddingHorizontal": {
+      "$value": "{spacing.md}",
+      "$type": "dimension"
+    },
+    "paddingVertical": {
+      "$value": "{spacing.sm}",
+      "$type": "dimension"
+    },
+    "gap": {
+      "$value": "{spacing.sm}",
+      "$type": "dimension"
+    },
+    "minHeight": {
+      "$value": "{size.listItemMin}",
+      "$type": "dimension"
+    },
+    "titleColor": {
+      "$value": "{color.text.primary}",
+      "$type": "color"
+    },
+    "subtitleColor": {
+      "$value": "{color.text.secondary}",
+      "$type": "color"
+    },
+    "amountInboundColor": {
+      "$value": "{color.text.positive}",
+      "$type": "color"
+    },
+    "amountOutboundColor": {
+      "$value": "{color.text.primary}",
+      "$type": "color"
+    },
+    "amountPendingColor": {
+      "$value": "{color.text.secondary}",
+      "$type": "color"
+    },
+    "flaggedAccentColor": {
+      "$value": "{color.border.attention}",
+      "$type": "color"
+    },
+    "flaggedAccentWidth": {
+      "$value": "{borderWidth.accent}",
+      "$type": "dimension"
+    },
+    "flagIconColor": {
+      "$value": "{color.icon.attention}",
+      "$type": "color"
+    },
+    "flagIconSize": {
+      "$value": "{size.icon}",
+      "$type": "dimension"
+    },
+    "flagTextColor": {
+      "$value": "{color.text.attention}",
+      "$type": "color"
+    },
+    "avatarSize": {
+      "$value": "{size.avatar}",
+      "$type": "dimension"
+    },
+    "avatarRadius": {
+      "$value": "{radius.pill}",
+      "$type": "dimension"
+    },
+    "avatarBackground": {
+      "$value": "{color.surface.muted}",
+      "$type": "color"
+    },
+    "avatarTextColor": {
+      "$value": "{color.text.secondary}",
+      "$type": "color"
+    }
+  },
+  "badge": {
+    "paddingHorizontal": {
+      "$value": "{spacing.xs}",
+      "$type": "dimension"
+    },
+    "paddingVertical": {
+      "$value": "{spacing.none}",
+      "$type": "dimension"
+    },
+    "radius": {
+      "$value": "{radius.sm}",
+      "$type": "dimension"
+    },
+    "pendingBackground": {
+      "$value": "{color.status.pending.background}",
+      "$type": "color"
+    },
+    "pendingText": {
+      "$value": "{color.status.pending.text}",
+      "$type": "color"
+    },
+    "attentionBackground": {
+      "$value": "{color.status.attention.background}",
+      "$type": "color"
+    },
+    "attentionText": {
+      "$value": "{color.status.attention.text}",
+      "$type": "color"
+    }
+  },
+  "skeleton": {
+    "color": {
+      "$value": "{color.surface.muted}",
+      "$type": "color"
+    },
+    "radius": {
+      "$value": "{radius.sm}",
+      "$type": "dimension"
+    },
+    "pulseDuration": {
+      "$value": "{motion.duration.skeletonPulse}",
+      "$type": "duration"
+    },
+    "opacityMin": {
+      "$value": "{opacity.skeletonMin}",
+      "$type": "number"
+    },
+    "opacityMax": {
+      "$value": "{opacity.skeletonMax}",
+      "$type": "number"
+    }
+  }
+}

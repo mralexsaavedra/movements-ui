@@ -1,0 +1,181 @@
+{
+  "$description": "Mode-independent semantic layer (intent). Colors live in semantic.light.json / semantic.dark.json.",
+  "spacing": {
+    "none": {
+      "$value": "{space.0}",
+      "$type": "dimension"
+    },
+    "xxs": {
+      "$value": "{space.1}",
+      "$type": "dimension"
+    },
+    "xs": {
+      "$value": "{space.2}",
+      "$type": "dimension"
+    },
+    "sm": {
+      "$value": "{space.3}",
+      "$type": "dimension"
+    },
+    "md": {
+      "$value": "{space.4}",
+      "$type": "dimension"
+    },
+    "lg": {
+      "$value": "{space.6}",
+      "$type": "dimension"
+    },
+    "xl": {
+      "$value": "{space.8}",
+      "$type": "dimension"
+    }
+  },
+  "radius": {
+    "sm": {
+      "$value": "{radius.1}",
+      "$type": "dimension"
+    },
+    "md": {
+      "$value": "{radius.2}",
+      "$type": "dimension"
+    },
+    "lg": {
+      "$value": "{radius.3}",
+      "$type": "dimension"
+    },
+    "pill": {
+      "$value": "{radius.full}",
+      "$type": "dimension"
+    }
+  },
+  "size": {
+    "icon": {
+      "$value": "{size.16}",
+      "$type": "dimension"
+    },
+    "avatar": {
+      "$value": "{size.40}",
+      "$type": "dimension"
+    },
+    "touchTarget": {
+      "$value": "{size.44}",
+      "$type": "dimension"
+    },
+    "listItemMin": {
+      "$value": "{size.72}",
+      "$type": "dimension"
+    }
+  },
+  "borderWidth": {
+    "hairline": {
+      "$value": "{borderWidth.1}",
+      "$type": "dimension"
+    },
+    "accent": {
+      "$value": "{borderWidth.4}",
+      "$type": "dimension"
+    }
+  },
+  "typography": {
+    "title": {
+      "fontSize": {
+        "$value": "{fontSize.16}",
+        "$type": "dimension"
+      },
+      "lineHeight": {
+        "$value": "{lineHeight.24}",
+        "$type": "dimension"
+      },
+      "fontWeight": {
+        "$value": "{fontWeight.semibold}",
+        "$type": "fontWeight"
+      }
+    },
+    "body": {
+      "fontSize": {
+        "$value": "{fontSize.14}",
+        "$type": "dimension"
+      },
+      "lineHeight": {
+        "$value": "{lineHeight.20}",
+        "$type": "dimension"
+      },
+      "fontWeight": {
+        "$value": "{fontWeight.regular}",
+        "$type": "fontWeight"
+      }
+    },
+    "caption": {
+      "fontSize": {
+        "$value": "{fontSize.12}",
+        "$type": "dimension"
+      },
+      "lineHeight": {
+        "$value": "{lineHeight.16}",
+        "$type": "dimension"
+      },
+      "fontWeight": {
+        "$value": "{fontWeight.regular}",
+        "$type": "fontWeight"
+      }
+    },
+    "amount": {
+      "fontSize": {
+        "$value": "{fontSize.16}",
+        "$type": "dimension"
+      },
+      "lineHeight": {
+        "$value": "{lineHeight.24}",
+        "$type": "dimension"
+      },
+      "fontWeight": {
+        "$value": "{fontWeight.semibold}",
+        "$type": "fontWeight"
+      }
+    },
+    "badge": {
+      "fontSize": {
+        "$value": "{fontSize.12}",
+        "$type": "dimension"
+      },
+      "lineHeight": {
+        "$value": "{lineHeight.16}",
+        "$type": "dimension"
+      },
+      "fontWeight": {
+        "$value": "{fontWeight.medium}",
+        "$type": "fontWeight"
+      }
+    },
+    "maxFontSizeMultiplier": {
+      "$value": "{fontScale.200}",
+      "$type": "number"
+    }
+  },
+  "motion": {
+    "duration": {
+      "fast": {
+        "$value": "{duration.150}",
+        "$type": "duration"
+      },
+      "base": {
+        "$value": "{duration.250}",
+        "$type": "duration"
+      },
+      "skeletonPulse": {
+        "$value": "{duration.1000}",
+        "$type": "duration"
+      }
+    }
+  },
+  "opacity": {
+    "skeletonMin": {
+      "$value": "{opacity.40}",
+      "$type": "number"
+    },
+    "skeletonMax": {
+      "$value": "{opacity.100}",
+      "$type": "number"
+    }
+  }
+}

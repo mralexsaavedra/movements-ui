@@ -20,73 +20,73 @@ Load before writing any style, adding a token, or touching `src/design-system/`.
 
 ## DTCG Structure (three layers)
 
-Files in `src/design-system/tokens/`: `primitive.json`, `semantic.json`, `component.json`.
-Each token has `$value` and `$type`; references use `{path.to.token}`.
+`DESIGN.md` (repo root) is the authored spec; the token files implement it. Change both together.
+
+Files in `src/design-system/tokens/`: `primitive.json`, `semantic.json` (mode-independent:
+spacing, radius, size, typography, motion, opacity), `semantic.light.json` + `semantic.dark.json`
+(the same `color.*` keys remapped per mode), `component.json` (`itemCard`, `badge`, `skeleton`).
+Each token has `$value` and `$type`; references use `{path.to.token}`. Component tokens alias
+semantic tokens only (a test enforces it).
 
 ```json
 // primitive.json
 {
   "color": {
-    "green": { "600": { "$value": "#1E7F4F", "$type": "color" } },
-    "neutral": { "900": { "$value": "#111418", "$type": "color" } }
+    "green": { "600": { "$value": "#1B7A4A", "$type": "color" } },
+    "neutral": { "900": { "$value": "#15181C", "$type": "color" } }
   },
   "space": { "4": { "$value": 16, "$type": "dimension" } }
 }
 ```
 
 ```json
-// semantic.json
+// semantic.light.json (semantic.dark.json remaps the same keys)
 {
   "color": {
     "text": {
       "primary": { "$value": "{color.neutral.900}", "$type": "color" },
       "positive": { "$value": "{color.green.600}", "$type": "color" }
     }
-  },
-  "spacing": { "md": { "$value": "{space.4}", "$type": "dimension" } }
+  }
 }
+// semantic.json (mode-independent)
+{ "spacing": { "md": { "$value": "{space.4}", "$type": "dimension" } } }
 ```
 
 ```json
 // component.json
 {
   "itemCard": {
-    "padding": { "$value": "{spacing.md}", "$type": "dimension" },
-    "amountInbound": { "$value": "{color.text.positive}", "$type": "color" }
+    "paddingHorizontal": { "$value": "{spacing.md}", "$type": "dimension" },
+    "amountInboundColor": { "$value": "{color.text.positive}", "$type": "color" }
   }
 }
 ```
 
 Note: DTCG dimensions are formally `{ value, unit }`/`"16px"`; we use unitless numbers (RN density-independent
-pixels). Document this deviation in the README.
+pixels) and milliseconds. The deviation is documented in `DESIGN.md` §3.
 
 ## Typed Theme
 
-Resolve references once at build/import time and derive types from the resolved object so a typo
-is a compile error:
+`src/design-system/theme/`:
 
-```ts
-// theme/theme.ts
-import component from "../tokens/component.json";
-import primitive from "../tokens/primitive.json";
-import semantic from "../tokens/semantic.json";
-import { resolveTokens } from "./resolveTokens";
+| File                | Role                                                                       |
+| ------------------- | -------------------------------------------------------------------------- |
+| `resolveTokens.ts`  | Pure: flattens DTCG, resolves chained aliases, throws on unknown/cycle/dup |
+| `Theme.ts`          | Hand-written `Theme` interface + compile-time key contract with the JSON   |
+| `buildTheme.ts`     | `buildTheme(mode)` → frozen `Theme` (semantic + component, no primitives)  |
+| `ThemeProvider.tsx` | Follows `useColorScheme()`; `mode` prop overrides (stories, tests)         |
+| `useTheme.ts`       | Returns the theme; throws outside `ThemeProvider`                          |
 
-export const theme = resolveTokens({ primitive, semantic, component });
-export type Theme = typeof theme;
-// usage: theme.color.text.positive -> string, theme.itemCard.padding -> number
-```
-
-`resolveTokens` strips `$type`, replaces `{a.b.c}` aliases (throws on unknown/cyclic refs) and is
-unit-tested. Requires `"resolveJsonModule": true`.
+Why an interface and not `typeof json`: JSON imports widen `$value` to `string`, so aliases that
+resolve to numbers would be mistyped. `ThemeMatchesTokens` in `Theme.ts` fails compilation when
+JSON and interface keys drift; `buildTheme.test.ts` checks value kinds against `$type`.
 
 ```tsx
-// theme/ThemeProvider.tsx
-const ThemeContext = createContext<Theme>(theme);
-export const ThemeProvider = ({ children }: { readonly children: ReactNode }) => (
-  <ThemeContext value={theme}>{children}</ThemeContext>
-);
-export const useTheme = (): Theme => use(ThemeContext);
+import { ThemeProvider, useTheme } from "@/design-system/theme";
+
+<ThemeProvider mode="dark">{children}</ThemeProvider>; // omit `mode` to follow the system
+const theme = useTheme(); // theme.color.text.positive: string, theme.itemCard.gap: number
 ```
 
 ## `X.style.ts` Pattern
@@ -100,11 +100,11 @@ import type { Theme } from "@/design-system/theme";
 export const style = (theme: Theme) =>
   StyleSheet.create({
     container: {
-      padding: theme.itemCard.padding,
+      paddingHorizontal: theme.itemCard.paddingHorizontal,
       borderRadius: theme.itemCard.radius,
-      backgroundColor: theme.color.surface.default,
+      backgroundColor: theme.itemCard.background,
     },
-    amountInbound: { color: theme.itemCard.amountInbound },
+    amountInbound: { color: theme.itemCard.amountInboundColor },
   });
 ```
 
@@ -116,8 +116,11 @@ const styles = useMemo(() => style(theme), [theme]);
 
 ## Adding a Token
 
-1. Need a raw value not in the palette/scale? Add it to `primitive.json`.
-2. Add/reuse a **semantic** token expressing intent (`color.status.warning`).
-3. If only one component needs it, add a **component** token aliasing the semantic one.
-4. Consume it via `theme.*` in `X.style.ts`; typecheck catches wrong paths.
-5. Update the Storybook token story if one exists.
+1. Update `DESIGN.md` first (it is the source of truth).
+2. Need a raw value not in the palette/scale? Add it to `primitive.json`.
+3. Add/reuse a **semantic** token expressing intent; colors go in **both** `semantic.light.json`
+   and `semantic.dark.json`.
+4. If only one component needs it, add a **component** token aliasing the semantic one.
+5. Add the key to the `Theme` interface (typecheck fails until you do).
+6. Consume it via `theme.*` in `X.style.ts`; typecheck catches wrong paths.
+7. Update the Storybook token story if one exists.

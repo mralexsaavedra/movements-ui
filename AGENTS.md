@@ -105,8 +105,11 @@ injection (provider/context), never instantiating adapters inside components.
 
 ## Design Tokens Rules
 
-- Tokens live in `src/design-system/tokens/*.json` using the W3C Design Tokens (DTCG) format.
-- Assumption: no token file was provided, so we author one. Document this in the README.
+- `DESIGN.md` is the authored design spec (no design or token file was provided); tokens implement it.
+- Tokens live in `src/design-system/tokens/*.json` using the W3C Design Tokens (DTCG) format:
+  `primitive.json`, `semantic.json`, `semantic.{light,dark}.json`, `component.json`.
+- Theme API: `ThemeProvider` (follows the system scheme, `mode` overrides) and `useTheme()` from
+  `@/design-system/theme`; `Theme` is a typed, frozen object per mode.
 - Three layers: **primitive** (raw palette/scale) → **semantic** (intent: `color.text.positive`) → **component** (`itemCard.padding`).
 - Components consume **semantic/component** tokens only, never primitives, never literals.
 - No hardcoded colors, spacing, radii, font sizes, or durations in components. Ever.
