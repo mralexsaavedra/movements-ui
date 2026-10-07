@@ -1,5 +1,6 @@
 import component from "../tokens/component.json";
 import primitive from "../tokens/primitive.json";
+import semanticDark from "../tokens/semantic.dark.json";
 import semantic from "../tokens/semantic.json";
 import semanticLight from "../tokens/semantic.light.json";
 import { buildTheme } from "./buildTheme";
@@ -73,11 +74,14 @@ describe("buildTheme", () => {
     );
   });
 
-  it("matches each value kind to its DTCG $type", () => {
-    const types = tokenTypes(semantic, semanticLight, component);
+  it.each([
+    ["light", semanticLight],
+    ["dark", semanticDark],
+  ] as const)("matches each %s value kind to its DTCG $type", (mode, semanticMode) => {
+    const types = tokenTypes(semantic, semanticMode, component);
     const numeric = new Set(["dimension", "duration", "number"]);
 
-    for (const [path, value] of Object.entries(leaves(buildTheme("light")))) {
+    for (const [path, value] of Object.entries(leaves(buildTheme(mode)))) {
       if (path === "mode") continue;
       const type = types[path];
       expect([path, typeof value]).toEqual([path, numeric.has(type ?? "") ? "number" : "string"]);
