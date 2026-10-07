@@ -1,0 +1,91 @@
+openapi: 3.1.0
+info:
+  title: Movements API
+  version: 1.0.0
+  description: >-
+    Simplified contract consumed by the movements list. Cursor-paginated list of
+    financial movements. This file documents the contract; the app mirrors it with
+    hand-written DTO types and Zod schemas (see contract/README.md).
+paths:
+  /items:
+    get:
+      operationId: listItems
+      summary: List movements, newest first, cursor-paginated
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque cursor returned as `nextCursor` by the previous page. Omit for the first page.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of items in the page.
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+      responses:
+        "200":
+          description: A page of movements.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemsPage"
+components:
+  schemas:
+    ItemsPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Item"
+        nextCursor:
+          description: Cursor for the next page, or null when there are no more pages.
+          type: [string, "null"]
+    Item:
+      type: object
+      required: [id, type, status, amount, label, category, date, flagged]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [inbound, outbound]
+        status:
+          type: string
+          enum: [pending, confirmed]
+        amount:
+          $ref: "#/components/schemas/Amount"
+        label:
+          $ref: "#/components/schemas/Label"
+        category:
+          type: string
+        date:
+          description: ISO 8601 date-time.
+          type: string
+          format: date-time
+        flagged:
+          type: boolean
+    Amount:
+      type: object
+      required: [value, currency]
+      properties:
+        value:
+          description: Magnitude of the movement; the direction is carried by `type`.
+          type: number
+        currency:
+          description: ISO 4217 currency code.
+          type: string
+    Label:
+      type: object
+      required: [name, imageUrl]
+      properties:
+        name:
+          type: string
+        imageUrl:
+          type: [string, "null"]
+          format: uri
