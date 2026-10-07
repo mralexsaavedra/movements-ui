@@ -67,10 +67,10 @@ is a compile error:
 
 ```ts
 // theme/theme.ts
-import primitive from '../tokens/primitive.json';
-import semantic from '../tokens/semantic.json';
-import component from '../tokens/component.json';
-import { resolveTokens } from './resolveTokens';
+import component from "../tokens/component.json";
+import primitive from "../tokens/primitive.json";
+import semantic from "../tokens/semantic.json";
+import { resolveTokens } from "./resolveTokens";
 
 export const theme = resolveTokens({ primitive, semantic, component });
 export type Theme = typeof theme;
@@ -93,8 +93,9 @@ export const useTheme = (): Theme => use(ThemeContext);
 
 ```ts
 // itemCard/ItemCard.style.ts
-import { StyleSheet } from 'react-native';
-import type { Theme } from '@/design-system/theme';
+import { StyleSheet } from "react-native";
+
+import type { Theme } from "@/design-system/theme";
 
 export const style = (theme: Theme) =>
   StyleSheet.create({

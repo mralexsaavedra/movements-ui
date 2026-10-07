@@ -13,13 +13,13 @@ Load before building or optimizing `MovementList` or any long scrollable collect
 
 ## FlashList vs FlatList (open decision — record outcome in README)
 
-| Aspect            | FlatList (core)                          | FlashList (Shopify)                          |
-| ----------------- | ---------------------------------------- | -------------------------------------------- |
-| Dependency        | none                                     | extra package (check SDK 57 compatibility via `npx expo install`) |
-| Rendering         | virtualization, mounts/unmounts rows     | cell recycling, fewer blank areas            |
-| Tuning            | `getItemLayout`, `windowSize`, batching  | mostly automatic (v2 drops `estimatedItemSize`) |
-| New Architecture  | supported                                | v2 requires New Architecture                 |
-| Risk              | well known, verbose tuning               | recycling bugs if rows hold local state      |
+| Aspect           | FlatList (core)                         | FlashList (Shopify)                                               |
+| ---------------- | --------------------------------------- | ----------------------------------------------------------------- |
+| Dependency       | none                                    | extra package (check SDK 57 compatibility via `npx expo install`) |
+| Rendering        | virtualization, mounts/unmounts rows    | cell recycling, fewer blank areas                                 |
+| Tuning           | `getItemLayout`, `windowSize`, batching | mostly automatic (v2 drops `estimatedItemSize`)                   |
+| New Architecture | supported                               | v2 requires New Architecture                                      |
+| Risk             | well known, verbose tuning              | recycling bugs if rows hold local state                           |
 
 Pick one, measure (JS FPS, blank cells) with ~5000 mock rows, document why.
 
@@ -34,12 +34,16 @@ Pick one, measure (JS FPS, blank cells) with ~5000 mock rows, document why.
 ```tsx
 const keyExtractor = (m: Movement) => m.id;
 
-const MovementRow = memo(({ movement }: { readonly movement: Movement }) => <ItemCard movement={movement} />);
+const MovementRow = memo(({ movement }: { readonly movement: Movement }) => (
+  <ItemCard movement={movement} />
+));
 
 const renderItem: ListRenderItem<Movement> = ({ item }) => <MovementRow movement={item} />;
 
 const getItemLayout = (_: ArrayLike<Movement> | null | undefined, index: number) => ({
-  length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index,
+  length: ITEM_HEIGHT,
+  offset: ITEM_HEIGHT * index,
+  index,
 });
 ```
 
@@ -53,8 +57,8 @@ const getItemLayout = (_: ArrayLike<Movement> | null | undefined, index: number)
   keyExtractor={keyExtractor}
   renderItem={renderItem}
   getItemLayout={getItemLayout}
-  onEndReached={loadMore}            // guarded: hasNextPage && !isFetchingNextPage
-  onEndReachedThreshold={0.5}        // half a viewport before the end
+  onEndReached={loadMore} // guarded: hasNextPage && !isFetchingNextPage
+  onEndReachedThreshold={0.5} // half a viewport before the end
   refreshing={isRefreshing}
   onRefresh={refresh}
   ListFooterComponent={isLoadingMore ? <ItemCardSkeleton /> : null}
@@ -65,14 +69,14 @@ const getItemLayout = (_: ArrayLike<Movement> | null | undefined, index: number)
 />
 ```
 
-| State            | UI                                              |
-| ---------------- | ----------------------------------------------- |
-| Initial loading  | N skeleton rows (no spinner)                    |
-| Empty            | Empty state message                             |
-| Error, no data   | Error state + retry button                      |
-| Error, with data | Keep data, inline retry in footer               |
-| Loading more     | Footer skeleton                                 |
-| Refreshing       | Native pull-to-refresh indicator                |
+| State            | UI                                |
+| ---------------- | --------------------------------- |
+| Initial loading  | N skeleton rows (no spinner)      |
+| Empty            | Empty state message               |
+| Error, no data   | Error state + retry button        |
+| Error, with data | Keep data, inline retry in footer |
+| Loading more     | Footer skeleton                   |
+| Refreshing       | Native pull-to-refresh indicator  |
 
 ## Checks
 

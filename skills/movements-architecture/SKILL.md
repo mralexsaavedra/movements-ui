@@ -25,21 +25,24 @@ src/
 
 ## Dependency Rule
 
-| Layer            | May import                                   | Must NOT import                         |
-| ---------------- | -------------------------------------------- | --------------------------------------- |
+| Layer            | May import                                   | Must NOT import                               |
+| ---------------- | -------------------------------------------- | --------------------------------------------- |
 | `domain`         | other domain files, `shared` pure utils      | React, RN, fetch, Zod, React Query, infra, ui |
-| `infrastructure` | `domain`, Zod, `shared`                      | `ui`, React components                  |
-| `ui`             | `domain` types, `design-system`, React Query | concrete adapters (inject them)         |
-| `design-system`  | tokens, RN                                   | any `features/*`                        |
+| `infrastructure` | `domain`, Zod, `shared`                      | `ui`, React components                        |
+| `ui`             | `domain` types, `design-system`, React Query | concrete adapters (inject them)               |
+| `design-system`  | tokens, RN                                   | any `features/*`                              |
 
 Repository implementations are injected through a provider so tests/stories can swap them:
 
 ```ts
 // domain/MovementRepository.ts
-import type { MovementPage } from './Movement';
+import type { MovementPage } from "./Movement";
 
 export interface MovementRepository {
-  readonly list: (params: { readonly cursor?: string; readonly limit: number }) => Promise<MovementPage>;
+  readonly list: (params: {
+    readonly cursor?: string;
+    readonly limit: number;
+  }) => Promise<MovementPage>;
 }
 ```
 
@@ -49,25 +52,25 @@ const MovementRepositoryContext = createContext<MovementRepository | null>(null)
 
 export const useMovementRepository = (): MovementRepository => {
   const repo = use(MovementRepositoryContext);
-  if (!repo) throw new Error('MovementRepositoryProvider missing');
+  if (!repo) throw new Error("MovementRepositoryProvider missing");
   return repo;
 };
 ```
 
 ## Where New Files Go
 
-| You are adding…                      | Location                                                     |
-| ------------------------------------ | ------------------------------------------------------------ |
-| Business type / rule (no I/O)        | `features/movements/domain/`                                 |
-| Contract type mirroring JSON         | `features/movements/infrastructure/dto/`                     |
-| Zod schema                           | `features/movements/infrastructure/schemas/`                 |
-| DTO → domain conversion              | `features/movements/infrastructure/mappers/`                 |
-| HTTP or mock repository              | `features/movements/infrastructure/repositories/`            |
-| Presentational feature component     | `features/movements/ui/components/<camelName>/`              |
-| Query or controller hook             | `features/movements/ui/hooks/use<Name>.ts`                   |
-| Screen                               | `features/movements/ui/views/<Name>View.tsx`                 |
-| Reusable visual primitive            | `design-system/components/<camelName>/`                      |
-| Cross-feature pure helper            | `shared/<area>/`                                             |
+| You are adding…                  | Location                                          |
+| -------------------------------- | ------------------------------------------------- |
+| Business type / rule (no I/O)    | `features/movements/domain/`                      |
+| Contract type mirroring JSON     | `features/movements/infrastructure/dto/`          |
+| Zod schema                       | `features/movements/infrastructure/schemas/`      |
+| DTO → domain conversion          | `features/movements/infrastructure/mappers/`      |
+| HTTP or mock repository          | `features/movements/infrastructure/repositories/` |
+| Presentational feature component | `features/movements/ui/components/<camelName>/`   |
+| Query or controller hook         | `features/movements/ui/hooks/use<Name>.ts`        |
+| Screen                           | `features/movements/ui/views/<Name>View.tsx`      |
+| Reusable visual primitive        | `design-system/components/<camelName>/`           |
+| Cross-feature pure helper        | `shared/<area>/`                                  |
 
 ## Naming
 

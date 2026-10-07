@@ -26,12 +26,14 @@ Load before creating or editing any `*.stories.tsx` or Storybook config (`.rnsto
 
 ```tsx
 // ItemCard.stories.tsx
-import type { Meta, StoryObj } from '@storybook/react-native';
-import { buildMovement } from '@/features/movements/testing/buildMovement';
-import { ItemCard } from './ItemCard';
+import type { Meta, StoryObj } from "@storybook/react-native";
+
+import { buildMovement } from "@/features/movements/testing/buildMovement";
+
+import { ItemCard } from "./ItemCard";
 
 const meta = {
-  title: 'Movements/ItemCard',
+  title: "Movements/ItemCard",
   component: ItemCard,
   args: { movement: buildMovement() },
 } satisfies Meta<typeof ItemCard>;
@@ -39,15 +41,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Inbound: Story = { args: { movement: buildMovement({ direction: 'inbound' }) } };
-export const Outbound: Story = { args: { movement: buildMovement({ direction: 'outbound' }) } };
+export const Inbound: Story = { args: { movement: buildMovement({ direction: "inbound" }) } };
+export const Outbound: Story = { args: { movement: buildMovement({ direction: "outbound" }) } };
 export const Pending: Story = { args: { movement: buildMovement({ isPending: true }) } };
 export const Flagged: Story = { args: { movement: buildMovement({ needsAttention: true }) } };
 export const LongText: Story = {
-  args: { movement: buildMovement({ counterparty: { name: 'A very long merchant name '.repeat(4), imageUrl: null } }) },
+  args: {
+    movement: buildMovement({
+      counterparty: { name: "A very long merchant name ".repeat(4), imageUrl: null },
+    }),
+  },
 };
 export const NoImage: Story = {
-  args: { movement: buildMovement({ counterparty: { name: 'Acme Store', imageUrl: null } }) },
+  args: { movement: buildMovement({ counterparty: { name: "Acme Store", imageUrl: null } }) },
 };
 ```
 
@@ -57,11 +63,18 @@ Skeleton is a separate component with its own story file (`ItemCardSkeleton.stor
 
 ```tsx
 // .rnstorybook/preview.tsx
-import type { Preview } from '@storybook/react-native';
-import { ThemeProvider } from '@/design-system/theme';
+import type { Preview } from "@storybook/react-native";
+
+import { ThemeProvider } from "@/design-system/theme";
 
 const preview: Preview = {
-  decorators: [(Story) => <ThemeProvider><Story /></ThemeProvider>],
+  decorators: [
+    (Story) => (
+      <ThemeProvider>
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
 };
 export default preview;
 ```

@@ -20,6 +20,7 @@ The deliverable is a public GitHub repo + README that defends trade-offs.
 - NEVER commit the exercise statement or the job offer (PDFs or copies). Paraphrase, never quote verbatim.
 - Mock data uses fictional merchants and people only.
 - The original exercise statement and job offer live in `.private/` (gitignored, present only on the owner's Mac and the apps agent host). Read them before planning a task; never copy, move, or `git add -f` them.
+
 ## Expo has changed — do not trust your training data
 
 Expo ships breaking changes every SDK release. Before touching any Expo, EAS, or React Native API:
@@ -33,37 +34,38 @@ Generic Expo skills come from the `expo@claude-plugins-official` plugin enabled 
 
 ## Stack
 
-| Concern         | Choice                                                    |
-| --------------- | --------------------------------------------------------- |
-| Runtime         | Expo SDK 57, React 19.2, React Native 0.86                |
-| Language        | TypeScript strict (see `tsconfig.json`)                   |
-| Server state    | TanStack React Query v5 (`useInfiniteQuery`, cursor)      |
-| Validation      | Zod at the infrastructure boundary                        |
+| Concern         | Choice                                                      |
+| --------------- | ----------------------------------------------------------- |
+| Runtime         | Expo SDK 57, React 19.2, React Native 0.86                  |
+| Language        | TypeScript strict (see `tsconfig.json`)                     |
+| Server state    | TanStack React Query v5 (`useInfiniteQuery`, cursor)        |
+| Validation      | Zod at the infrastructure boundary                          |
 | Lists           | FlashList vs FlatList — **open decision**, record in README |
-| Tests           | Jest (`jest-expo`) + `@testing-library/react-native`      |
-| E2E             | Maestro (`e2e/`)                                          |
-| Docs            | Storybook for React Native                                |
-| Package manager | pnpm (`nodeLinker: hoisted`)                              |
-| Lint / format   | oxlint + Prettier, Husky + lint-staged                    |
+| Tests           | Jest (`jest-expo`) + `@testing-library/react-native` v14    |
+| E2E             | Maestro (`e2e/`)                                            |
+| Docs            | Storybook for React Native                                  |
+| Package manager | pnpm 11 (`packageManager` pin, `nodeLinker: hoisted`)       |
+| Lint / format   | oxlint + Prettier, Husky + lint-staged                      |
 
 ## Commands
 
 Always add native-aware deps with `npx expo install <pkg>` (resolves SDK-compatible versions), never plain `pnpm add` for Expo/RN packages.
 
-| Task          | Command                       | Status |
-| ------------- | ----------------------------- | ------ |
-| Install       | `pnpm install`                | ready  |
-| Start         | `pnpm start` (`expo start`)   | ready  |
-| iOS / Android | `pnpm ios` / `pnpm android`   | ready  |
-| Lint          | `pnpm lint`                   | TODO (T01) |
-| Format        | `pnpm format`                 | TODO (T01) |
-| Typecheck     | `pnpm typecheck`              | TODO (T01) |
-| Test          | `pnpm test`                   | TODO (T01) |
-| Storybook     | `pnpm storybook`              | TODO (T07) |
-| E2E           | `pnpm e2e` (`maestro test e2e/`) | TODO (T09) |
-| Doctor        | `npx expo-doctor`             | ready  |
+| Task          | Command                                          | Status     |
+| ------------- | ------------------------------------------------ | ---------- |
+| Install       | `pnpm install`                                   | ready      |
+| Start         | `pnpm start` (`expo start`)                      | ready      |
+| iOS / Android | `pnpm ios` / `pnpm android`                      | ready      |
+| Lint          | `pnpm lint` (`oxlint`)                           | ready      |
+| Format        | `pnpm format` / `pnpm format:check` (Prettier)   | ready      |
+| Typecheck     | `pnpm typecheck` (`tsc --noEmit`)                | ready      |
+| Test          | `pnpm test` / `pnpm test:watch` / `pnpm test:ci` | ready      |
+| Storybook     | `pnpm storybook`                                 | TODO (T07) |
+| E2E           | `pnpm e2e` (`maestro test e2e/`)                 | TODO (T09) |
+| Doctor        | `npx expo-doctor`                                | ready      |
 
-Run lint, typecheck and tests before declaring any task done (once the scripts exist).
+Run lint, typecheck and tests before declaring any task done. Husky runs lint-staged on
+pre-commit and `pnpm typecheck && pnpm test:ci` on pre-push.
 
 ## Architecture
 
@@ -129,6 +131,10 @@ Test behavior that can break and matters to users, not implementation details.
 - **Hooks**: pagination/next-cursor behavior with a QueryClient wrapper (`retry: false`).
 - **E2E (bonus)**: Maestro flow — list loads, scrolls, paginates.
 - Tests are colocated `*.test.ts(x)`. No snapshot spam. Deterministic data only.
+- RNTL v14 APIs (`render`, `renderHook`, `fireEvent`, `act`) are async: always `await` them.
+  Before writing or changing RNTL tests, read the package docs for the installed version in
+  `node_modules/@testing-library/react-native/docs/` (start with `guides/llm-guidelines.md`).
+  Matchers such as `toBeOnTheScreen` are built in; no setup file is needed.
 
 ## Expo Rules
 
@@ -147,16 +153,16 @@ Test behavior that can break and matters to users, not implementation details.
 
 Load the matching `SKILL.md` BEFORE acting. Run `./skills/setup.sh` to link them into `.claude/skills/`.
 
-| Action                                                       | Skill                                      |
-| ------------------------------------------------------------ | ------------------------------------------ |
-| Deciding where a file goes, adding a layer, naming           | `skills/movements-architecture/SKILL.md`   |
-| Adding/using tokens, theme, writing `X.style.ts`             | `skills/design-tokens/SKILL.md`            |
-| DTO types, Zod schemas, mappers, mock adapter, repository    | `skills/api-contract/SKILL.md`             |
-| Query keys, infinite queries, cache config, controller hooks | `skills/react-query-patterns/SKILL.md`     |
-| Writing unit/component/hook tests, Maestro flows             | `skills/rn-testing/SKILL.md`               |
-| Writing or updating stories                                  | `skills/storybook-rn/SKILL.md`             |
-| List virtualization, pagination, scroll performance          | `skills/rn-list-performance/SKILL.md`      |
-| Component API design, variants, compound components          | `skills/composition-patterns/SKILL.md`     |
+| Action                                                       | Skill                                        |
+| ------------------------------------------------------------ | -------------------------------------------- |
+| Deciding where a file goes, adding a layer, naming           | `skills/movements-architecture/SKILL.md`     |
+| Adding/using tokens, theme, writing `X.style.ts`             | `skills/design-tokens/SKILL.md`              |
+| DTO types, Zod schemas, mappers, mock adapter, repository    | `skills/api-contract/SKILL.md`               |
+| Query keys, infinite queries, cache config, controller hooks | `skills/react-query-patterns/SKILL.md`       |
+| Writing unit/component/hook tests, Maestro flows             | `skills/rn-testing/SKILL.md`                 |
+| Writing or updating stories                                  | `skills/storybook-rn/SKILL.md`               |
+| List virtualization, pagination, scroll performance          | `skills/rn-list-performance/SKILL.md`        |
+| Component API design, variants, compound components          | `skills/composition-patterns/SKILL.md`       |
 | Expo SDK APIs, upgrades, native UI, deployment               | `expo@claude-plugins-official` plugin skills |
 
 Skill index: `.atl/skill-registry.md`.
