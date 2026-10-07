@@ -20,7 +20,7 @@ src/
 │   ├── domain/           # entities, value objects, ports, pure functions
 │   ├── infrastructure/   # dto/, schemas/, mappers/, repositories/ (http + mock)
 │   └── ui/{components,hooks,views}
-└── shared/               # formatting, queryClient, test utils
+└── shared/               # queryClient, test utils (cross-feature only)
 ```
 
 ## Dependency Rule
@@ -56,18 +56,19 @@ export const useMovementRepository = (): MovementRepository => {
 
 ## Where New Files Go
 
-| You are adding…                  | Location                                          |
-| -------------------------------- | ------------------------------------------------- |
-| Business type / rule (no I/O)    | `features/movements/domain/`                      |
-| Contract type mirroring JSON     | `features/movements/infrastructure/dto/`          |
-| Zod schema                       | `features/movements/infrastructure/schemas/`      |
-| DTO → domain conversion          | `features/movements/infrastructure/mappers/`      |
-| HTTP or mock repository          | `features/movements/infrastructure/repositories/` |
-| Presentational feature component | `features/movements/ui/components/<camelName>/`   |
-| Query or controller hook         | `features/movements/ui/hooks/use<Name>.ts`        |
-| Screen                           | `features/movements/ui/views/<Name>View.tsx`      |
-| Reusable visual primitive        | `design-system/components/<camelName>/`           |
-| Cross-feature pure helper        | `shared/<area>/`                                  |
+| You are adding…                   | Location                                          |
+| --------------------------------- | ------------------------------------------------- |
+| Business type / rule (no I/O)     | `features/movements/domain/`                      |
+| Movement formatting (amount/date) | `features/movements/domain/formatting/`           |
+| Contract type mirroring JSON      | `features/movements/infrastructure/dto/`          |
+| Zod schema                        | `features/movements/infrastructure/schemas/`      |
+| DTO → domain conversion           | `features/movements/infrastructure/mappers/`      |
+| HTTP or mock repository           | `features/movements/infrastructure/repositories/` |
+| Presentational feature component  | `features/movements/ui/components/<camelName>/`   |
+| Query or controller hook          | `features/movements/ui/hooks/use<Name>.ts`        |
+| Screen                            | `features/movements/ui/views/<Name>View.tsx`      |
+| Reusable visual primitive         | `design-system/components/<camelName>/`           |
+| Cross-feature pure helper         | `shared/<area>/`                                  |
 
 ## Naming
 
@@ -79,6 +80,8 @@ export const useMovementRepository = (): MovementRepository => {
 
 ## Rules
 
+- Formatting that depends on movement concepts (direction → sign) lives in the feature's
+  `domain/formatting/`; `shared/` must never import from `features/*`.
 - Presentational components receive data via `readonly` props; they never call hooks that fetch.
 - Views compose controller hooks + presentational components.
 - No barrel files beyond a component's own `index.ts`.
