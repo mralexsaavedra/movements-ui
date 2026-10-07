@@ -1,0 +1,12 @@
+pnpm-lock.yaml
+pnpm-workspace.yaml
+node_modules/
+odd/
+.private/
+coverage/
+.expo/
+dist/
+web-build/
+storybook-static/
+ios/
+android/

@@ -16,8 +16,8 @@ Load before writing hooks under `ui/hooks/`, configuring the QueryClient, or tes
 ```ts
 // features/movements/ui/hooks/queryKeys.ts
 export const movementKeys = {
-  all: ['movements'] as const,
-  lists: () => [...movementKeys.all, 'list'] as const,
+  all: ["movements"] as const,
+  lists: () => [...movementKeys.all, "list"] as const,
   list: (params: { readonly limit: number }) => [...movementKeys.lists(), params] as const,
 } as const;
 ```
@@ -28,9 +28,9 @@ Never inline key arrays elsewhere.
 
 ```ts
 // shared/query/cacheTimes.ts
-export const MOVEMENTS_STALE_TIME_MS = 30_000;       // fresh window: no refetch
-export const MOVEMENTS_GC_TIME_MS = 10 * 60_000;     // keep cached pages for instant re-entry
-export const DEFAULT_PAGE_SIZE = 20;                 // contract default
+export const MOVEMENTS_STALE_TIME_MS = 30_000; // fresh window: no refetch
+export const MOVEMENTS_GC_TIME_MS = 10 * 60_000; // keep cached pages for instant re-entry
+export const DEFAULT_PAGE_SIZE = 20; // contract default
 ```
 
 SWR behavior: cached pages render immediately; once stale, React Query refetches in the background

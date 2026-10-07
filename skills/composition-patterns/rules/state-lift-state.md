@@ -100,12 +100,10 @@ function ForwardMessageDialog() {
     <ForwardMessageProvider>
       <Dialog>
         <ForwardMessageComposer />
-        <MessagePreview />{" "}
-        {/* Custom components can access state and actions */}
+        <MessagePreview /> {/* Custom components can access state and actions */}
         <DialogActions>
           <CancelButton />
-          <ForwardButton />{" "}
-          {/* Custom components can access state and actions */}
+          <ForwardButton /> {/* Custom components can access state and actions */}
         </DialogActions>
       </Dialog>
     </ForwardMessageProvider>

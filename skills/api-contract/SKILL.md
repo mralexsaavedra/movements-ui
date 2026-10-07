@@ -27,8 +27,8 @@ Item = { id, type: "inbound"|"outbound", status: "pending"|"confirmed",
 
 ```ts
 // infrastructure/dto/MovementDto.ts
-export type MovementTypeDto = 'inbound' | 'outbound';
-export type MovementStatusDto = 'pending' | 'confirmed';
+export type MovementTypeDto = "inbound" | "outbound";
+export type MovementStatusDto = "pending" | "confirmed";
 
 export interface MovementDto {
   readonly id: string;
@@ -56,12 +56,12 @@ assertion keeps types and validator in sync. With a real, growing spec, switch t
 
 ```ts
 // infrastructure/schemas/movementSchema.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 export const movementSchema = z.object({
   id: z.string().min(1),
-  type: z.enum(['inbound', 'outbound']),
-  status: z.enum(['pending', 'confirmed']),
+  type: z.enum(["inbound", "outbound"]),
+  status: z.enum(["pending", "confirmed"]),
   amount: z.object({ value: z.number().nonnegative(), currency: z.string().length(3) }),
   label: z.object({ name: z.string(), imageUrl: z.url().nullable() }),
   category: z.string(),
@@ -88,7 +88,7 @@ the Zod issues. Decide (and document) whether one bad item fails the page or is 
 export const toMovement = (dto: MovementDto): Movement => ({
   id: dto.id,
   direction: dto.type,
-  isPending: dto.status === 'pending',
+  isPending: dto.status === "pending",
   amount: { value: dto.amount.value, currency: dto.amount.currency },
   counterparty: { name: dto.label.name, imageUrl: dto.label.imageUrl },
   category: dto.category,
@@ -115,10 +115,10 @@ HTTP adapter: `fetch` → `json()` → `movementPageSchema.parse` → `toMovemen
 ```ts
 // infrastructure/repositories/createMockMovementRepository.ts
 interface MockOptions {
-  readonly seed?: number;          // same seed => same dataset
-  readonly total?: number;         // e.g. 5000 rows
-  readonly latencyMs?: number;     // simulate network
-  readonly failRate?: number;      // 0..1 error injection
+  readonly seed?: number; // same seed => same dataset
+  readonly total?: number; // e.g. 5000 rows
+  readonly latencyMs?: number; // simulate network
+  readonly failRate?: number; // 0..1 error injection
 }
 
 export const createMockMovementRepository = (opts: MockOptions = {}): MovementRepository => {
@@ -129,7 +129,7 @@ export const createMockMovementRepository = (opts: MockOptions = {}): MovementRe
   return {
     list: async ({ cursor, limit }) => {
       await delay(latencyMs);
-      if (rng() < failRate) throw new NetworkError('Injected failure');
+      if (rng() < failRate) throw new NetworkError("Injected failure");
       const start = cursor ? Number(decodeCursor(cursor)) : 0;
       const items = dataset.slice(start, start + limit);
       const next = start + limit < total ? encodeCursor(String(start + limit)) : null;

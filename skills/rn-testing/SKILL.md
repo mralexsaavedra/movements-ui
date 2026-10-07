@@ -15,14 +15,14 @@ Load before writing or reviewing any `*.test.ts(x)` or `e2e/*.yaml` file.
 
 Test it if a regression would show wrong money, hide information, or break navigation of the list.
 
-| Test                                   | Why                                       | Priority |
-| -------------------------------------- | ----------------------------------------- | -------- |
-| Amount formatting by type + currency   | Wrong sign/currency = user-facing bug     | required |
-| Zod validation (valid, invalid, edge)  | Boundary must reject bad payloads         | required |
-| DTO → domain mapper                    | Field renames silently break UI           | high     |
-| `ItemCard` states + a11y label         | Core visual contract                      | required |
-| Infinite query / controller pagination | Cursor bugs = duplicated/missing rows     | high     |
-| Token resolver (aliases, cycles)       | Design-system contract                    | medium   |
+| Test                                   | Why                                   | Priority |
+| -------------------------------------- | ------------------------------------- | -------- |
+| Amount formatting by type + currency   | Wrong sign/currency = user-facing bug | required |
+| Zod validation (valid, invalid, edge)  | Boundary must reject bad payloads     | required |
+| DTO → domain mapper                    | Field renames silently break UI       | high     |
+| `ItemCard` states + a11y label         | Core visual contract                  | required |
+| Infinite query / controller pagination | Cursor bugs = duplicated/missing rows | high     |
+| Token resolver (aliases, cycles)       | Design-system contract                | medium   |
 
 Do NOT test: StyleSheet values, library internals, snapshot of whole trees.
 
@@ -30,12 +30,12 @@ Do NOT test: StyleSheet values, library internals, snapshot of whole trees.
 
 ```ts
 // shared/formatting/formatAmount.test.ts
-describe('formatAmount', () => {
+describe("formatAmount", () => {
   it.each([
-    ['inbound', 12345.5, 'EUR', '+12.345,50\u00A0€'],
-    ['outbound', 12345.5, 'EUR', '-12.345,50\u00A0€'],
-  ] as const)('formats %s %d %s', (direction, value, currency, expected) => {
-    expect(formatAmount({ direction, value, currency, locale: 'es-ES' })).toBe(expected);
+    ["inbound", 12345.5, "EUR", "+12.345,50\u00A0€"],
+    ["outbound", 12345.5, "EUR", "-12.345,50\u00A0€"],
+  ] as const)("formats %s %d %s", (direction, value, currency, expected) => {
+    expect(formatAmount({ direction, value, currency, locale: "es-ES" })).toBe(expected);
   });
 });
 ```
@@ -44,8 +44,8 @@ Pin `locale` in tests (note: `es-ES` does not group 4-digit numbers, so `1234,50
 normalize or assert with those characters explicitly.
 
 ```ts
-it('rejects unknown movement type', () => {
-  const result = movementSchema.safeParse({ ...validDto, type: 'refund' });
+it("rejects unknown movement type", () => {
+  const result = movementSchema.safeParse({ ...validDto, type: "refund" });
   expect(result.success).toBe(false);
 });
 ```
@@ -55,28 +55,32 @@ it('rejects unknown movement type', () => {
 Query like a user: `getByRole`, `getByLabelText`, `getByText`. Use `testID` only as last resort.
 
 ```tsx
-it('announces an outbound pending movement', () => {
-  render(<ItemCard movement={buildMovement({ direction: 'outbound', isPending: true })} />, {
+it("announces an outbound pending movement", async () => {
+  await render(<ItemCard movement={buildMovement({ direction: "outbound", isPending: true })} />, {
     wrapper: ThemeProvider,
   });
   expect(screen.getByLabelText(/payment to .* pending/i)).toBeOnTheScreen();
-  expect(screen.getByText('Pending')).toBeOnTheScreen();
+  expect(screen.getByText("Pending")).toBeOnTheScreen();
 });
 
-it('falls back to initials when there is no image', () => {
-  render(<ItemCard movement={buildMovement({ counterparty: { name: 'Acme Store', imageUrl: null } })} />, {
-    wrapper: ThemeProvider,
-  });
-  expect(screen.getByText('AS')).toBeOnTheScreen();
+it("falls back to initials when there is no image", async () => {
+  await render(
+    <ItemCard movement={buildMovement({ counterparty: { name: "Acme Store", imageUrl: null } })} />,
+    {
+      wrapper: ThemeProvider,
+    },
+  );
+  expect(screen.getByText("AS")).toBeOnTheScreen();
 });
 ```
 
 - Use builders (`buildMovement(overrides)`) in `features/movements/testing/`, not inline fixtures.
-- `jest-expo` preset; `@testing-library/react-native` matchers are built in (v13+); verify setup in T01.
+- `jest-expo` preset; RNTL v14 with `test-renderer@1.2` (matches React 19.2). Matchers are built in.
+- RNTL v14 `render`/`renderHook`/`fireEvent`/`act` are async: always `await` them.
 
 ## Hook Tests
 
-Use `renderHook` + `createQueryWrapper` (see `react-query-patterns`), mock repository with
+Use `await renderHook(...)` + `createQueryWrapper` (see `react-query-patterns`), mock repository with
 `latencyMs: 0`, assert via `waitFor`.
 
 ## Maestro E2E
