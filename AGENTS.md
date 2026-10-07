@@ -80,13 +80,13 @@ src/
 │   └── components/      # generic primitives (Text, Skeleton, Avatar…)
 ├── features/
 │   └── movements/
-│       ├── domain/          # entities, value objects, repository port, pure logic
+│       ├── domain/          # entities, repository port, errors, pure logic (formatting/)
 │       ├── infrastructure/  # DTO types, Zod schemas, mappers, HTTP repo, mock adapter
 │       └── ui/
 │           ├── components/  # presentational (itemCard/, movementList/)
 │           ├── hooks/       # query hooks + controller hooks
 │           └── views/       # screens composing hooks + components
-└── shared/              # cross-feature utils (formatting, queryClient, testing)
+└── shared/              # cross-feature utils (queryClient, testing)
 ```
 
 ### Dependency rule
@@ -125,7 +125,8 @@ injection (provider/context), never instantiating adapters inside components.
 - Every payload is parsed with Zod at the boundary; invalid data fails loudly, never leaks into UI.
 - Mappers convert DTO → domain (e.g. ISO string → `Date`, `type` → `direction`); the sign is applied at formatting time.
 - The app runs against a deterministic mock adapter, not a real backend.
-- Money is formatted with `Intl.NumberFormat` using the contract currency.
+- Money is formatted with `Intl.NumberFormat` using the contract currency (`domain/formatting/`): inbound `+`, outbound `−` (U+2212), zero unsigned; default locale `es-ES`, injectable.
+- Invalid envelope → `ContractError` (page fails, retry); invalid item → dropped, counted in `invalidCount`, reported via the `ContractViolationReporter` port without raw values.
 - React Query provides stale-while-revalidate: cached data renders instantly, refetch in background.
 
 ## Testing Criteria

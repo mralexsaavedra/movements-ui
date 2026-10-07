@@ -23,92 +23,66 @@ Item = { id, type: "inbound"|"outbound", status: "pending"|"confirmed",
          category: string, date: string (ISO 8601), flagged: boolean }
 ```
 
+## Files
+
+| Piece                     | Location (`src/features/movements/`)                                              |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| Spec (source of truth)    | `contract/openapi.yaml` (repo root)                                               |
+| DTO types                 | `infrastructure/dto/ItemDto.ts`                                                   |
+| Zod schemas + drift guard | `infrastructure/schemas/itemSchema.ts`                                            |
+| DTO → domain mapper       | `infrastructure/mappers/toMovement.ts`                                            |
+| Invalid-data policy       | `infrastructure/parseMovementsPage.ts`                                            |
+| Reusable fixtures         | `infrastructure/__fixtures__/itemDtos.ts`                                         |
+| Entity, port, errors      | `domain/{Movement,MovementRepository,ContractError,ContractViolationReporter}.ts` |
+
 ## 1. DTO Types (manual, readonly)
 
-```ts
-// infrastructure/dto/MovementDto.ts
-export type MovementTypeDto = "inbound" | "outbound";
-export type MovementStatusDto = "pending" | "confirmed";
+`ItemDto` / `ItemsPageDto` mirror `Item` / `ItemsPage` 1:1 (names follow the contract, not the
+domain). Everything `readonly`.
 
-export interface MovementDto {
-  readonly id: string;
-  readonly type: MovementTypeDto;
-  readonly status: MovementStatusDto;
-  readonly amount: { readonly value: number; readonly currency: string };
-  readonly label: { readonly name: string; readonly imageUrl: string | null };
-  readonly category: string;
-  readonly date: string;
-  readonly flagged: boolean;
-}
+**Why manual, not codegen (`openapi-typescript`, `orval`):** one endpoint, ~10 fields, no
+backend-published spec to generate from; codegen adds a build step for little gain, and runtime
+validation is needed anyway. When the backend publishes and versions the spec, switch to
+codegen (ideally generating Zod too) and keep the mapper layer unchanged.
 
-export interface MovementPageDto {
-  readonly items: readonly MovementDto[];
-  readonly nextCursor: string | null;
-}
-```
+## 2. Zod Schema at the Boundary (Zod 4)
 
-**Why manual, not `openapi-typescript`:** one endpoint, ~10 fields; codegen adds a build step and
-tooling for little gain. We still need Zod for runtime safety, so the schema plus a compile-time
-assertion keeps types and validator in sync. With a real, growing spec, switch to codegen
-(`openapi-typescript` or `orval`/`zod` generation) and keep the mapper layer unchanged.
+- `itemSchema` validates one item; `itemsPageEnvelopeSchema` validates the envelope with
+  `items: z.array(z.unknown())` so items are validated one by one.
+- Stricter than the spec, each rule justified in a comment: `amount.value` `nonnegative()`
+  (Zod 4 `z.number()` already rejects `Infinity`/`NaN`), `currency` `/^[A-Z]{3}$/`,
+  `date` `z.iso.datetime({ offset: true })`, `id`/`label.name` `min(1)`,
+  `imageUrl` `z.httpUrl().nullable()`.
+- Drift guard: `ItemSchemaMatchesDto` asserts `z.infer<typeof itemSchema>` and `ItemDto` are
+  mutually assignable. Changing either side without the other fails `pnpm typecheck`.
 
-## 2. Zod Schema at the Boundary
+## 3. Invalid-Data Policy (`parseMovementsPage(raw, reporter)`)
 
-```ts
-// infrastructure/schemas/movementSchema.ts
-import { z } from "zod";
+| Case             | Behaviour                                                                         |
+| ---------------- | --------------------------------------------------------------------------------- |
+| Envelope invalid | throw `ContractError` (domain) with `{ path, code }` issues → UI error + retry    |
+| Item invalid     | drop it, `invalidCount += 1`, `reporter.reportInvalidItem({ index, id, issues })` |
+| Item valid       | `toMovement(dto)`                                                                 |
 
-export const movementSchema = z.object({
-  id: z.string().min(1),
-  type: z.enum(["inbound", "outbound"]),
-  status: z.enum(["pending", "confirmed"]),
-  amount: z.object({ value: z.number().nonnegative(), currency: z.string().length(3) }),
-  label: z.object({ name: z.string(), imageUrl: z.url().nullable() }),
-  category: z.string(),
-  date: z.iso.datetime({ offset: true }),
-  flagged: z.boolean(),
-});
+Reports and errors carry paths and Zod issue codes only — never raw values or Zod messages
+(payloads contain money data). The reporter is a domain port; no `console` in domain code.
 
-export const movementPageSchema = z.object({
-  items: z.array(movementSchema),
-  nextCursor: z.string().nullable(),
-});
+## 4. Mapper DTO → Domain
 
-// Drift guard: fails to compile if DTO and schema diverge.
-type _Assert = z.infer<typeof movementPageSchema> extends MovementPageDto ? true : never;
-```
+`toMovement`: `type` → `direction`, `label` → `counterparty`, ISO string → `Date`; everything
+else 1:1. Domain never sees DTOs; UI never sees DTOs. The sign is applied at formatting time
+(`domain/formatting/formatAmount.ts`).
 
-Validate with `safeParse`; on failure throw a typed `InvalidPayloadError` (domain error) carrying
-the Zod issues. Decide (and document) whether one bad item fails the page or is dropped+logged.
-
-## 3. Mapper DTO → Domain
-
-```ts
-// infrastructure/mappers/toMovement.ts
-export const toMovement = (dto: MovementDto): Movement => ({
-  id: dto.id,
-  direction: dto.type,
-  isPending: dto.status === "pending",
-  amount: { value: dto.amount.value, currency: dto.amount.currency },
-  counterparty: { name: dto.label.name, imageUrl: dto.label.imageUrl },
-  category: dto.category,
-  date: new Date(dto.date),
-  needsAttention: dto.flagged,
-});
-```
-
-Domain never sees DTOs; UI never sees DTOs.
-
-## 4. Repository Port + Adapters
+## Repository Port
 
 ```ts
 // domain/MovementRepository.ts
 export interface MovementRepository {
-  readonly list: (p: { readonly cursor?: string; readonly limit: number }) => Promise<MovementPage>;
+  readonly getMovements: (params: GetMovementsParams) => Promise<MovementsPage>;
 }
 ```
 
-HTTP adapter: `fetch` → `json()` → `movementPageSchema.parse` → `toMovement`.
+HTTP adapter: `fetch` → `json()` → `parseMovementsPage(raw, reporter)`.
 
 ## 5. Mock Adapter (deterministic)
 
@@ -119,6 +93,7 @@ interface MockOptions {
   readonly total?: number; // e.g. 5000 rows
   readonly latencyMs?: number; // simulate network
   readonly failRate?: number; // 0..1 error injection
+  readonly reporter?: ContractViolationReporter; // where dropped items are reported
 }
 
 export const createMockMovementRepository = (opts: MockOptions = {}): MovementRepository => {
@@ -127,15 +102,14 @@ export const createMockMovementRepository = (opts: MockOptions = {}): MovementRe
   const dataset = Array.from({ length: total }, (_, i) => generateMovementDto(rng, i));
 
   return {
-    list: async ({ cursor, limit }) => {
+    getMovements: async ({ cursor, limit }) => {
       await delay(latencyMs);
       if (rng() < failRate) throw new NetworkError("Injected failure");
       const start = cursor ? Number(decodeCursor(cursor)) : 0;
       const items = dataset.slice(start, start + limit);
       const next = start + limit < total ? encodeCursor(String(start + limit)) : null;
-      // Pass through the SAME schema + mapper as HTTP to exercise the boundary.
-      const page = movementPageSchema.parse({ items, nextCursor: next });
-      return { items: page.items.map(toMovement), nextCursor: page.nextCursor };
+      // Pass through the SAME parser as HTTP to exercise the boundary.
+      return parseMovementsPage({ items, nextCursor: next }, reporter);
     },
   };
 };

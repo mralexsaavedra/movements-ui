@@ -29,13 +29,14 @@ Do NOT test: StyleSheet values, library internals, snapshot of whole trees.
 ## Logic Tests
 
 ```ts
-// shared/formatting/formatAmount.test.ts
+// src/features/movements/domain/formatting/formatAmount.test.ts
 describe("formatAmount", () => {
   it.each([
-    ["inbound", 12345.5, "EUR", "+12.345,50\u00A0€"],
-    ["outbound", 12345.5, "EUR", "-12.345,50\u00A0€"],
-  ] as const)("formats %s %d %s", (direction, value, currency, expected) => {
-    expect(formatAmount({ direction, value, currency, locale: "es-ES" })).toBe(expected);
+    ["inbound", "+12.345,50 €"],
+    ["outbound", "\u221212.345,50 €"], // true minus sign (U+2212), never a hyphen
+  ] as const)("formats %s amounts with an explicit sign", (direction, expected) => {
+    const formatted = formatAmount({ value: 12345.5, currency: "EUR" }, direction, "es-ES");
+    expect(normalizeSpaces(formatted)).toBe(expected);
   });
 });
 ```
@@ -56,9 +57,12 @@ Query like a user: `getByRole`, `getByLabelText`, `getByText`. Use `testID` only
 
 ```tsx
 it("announces an outbound pending movement", async () => {
-  await render(<ItemCard movement={buildMovement({ direction: "outbound", isPending: true })} />, {
-    wrapper: ThemeProvider,
-  });
+  await render(
+    <ItemCard movement={buildMovement({ direction: "outbound", status: "pending" })} />,
+    {
+      wrapper: ThemeProvider,
+    },
+  );
   expect(screen.getByLabelText(/payment to .* pending/i)).toBeOnTheScreen();
   expect(screen.getByText("Pending")).toBeOnTheScreen();
 });
