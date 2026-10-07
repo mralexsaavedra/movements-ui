@@ -1,1 +1,4 @@
-pnpm typecheck && pnpm test:ci
+# tokens:check compares a fresh build with the working tree, so refuse to push
+# while token sources or generated files have uncommitted changes.
+git diff --quiet HEAD -- src/design-system/tokens || { echo "Uncommitted design token changes: commit them before pushing."; exit 1; }
+pnpm tokens:check && pnpm typecheck && pnpm test:ci

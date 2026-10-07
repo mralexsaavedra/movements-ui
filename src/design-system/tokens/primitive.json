@@ -1,0 +1,236 @@
+{
+  "color": {
+    "neutral": {
+      "0": {
+        "$value": "#FFFFFF",
+        "$type": "color"
+      },
+      "50": {
+        "$value": "#F5F6F8",
+        "$type": "color"
+      },
+      "100": {
+        "$value": "#EBEDF0",
+        "$type": "color"
+      },
+      "200": {
+        "$value": "#D5D9DF",
+        "$type": "color"
+      },
+      "400": {
+        "$value": "#8A929C",
+        "$type": "color"
+      },
+      "600": {
+        "$value": "#4A525C",
+        "$type": "color"
+      },
+      "700": {
+        "$value": "#343A42",
+        "$type": "color"
+      },
+      "800": {
+        "$value": "#22272D",
+        "$type": "color"
+      },
+      "900": {
+        "$value": "#15181C",
+        "$type": "color"
+      },
+      "950": {
+        "$value": "#0C0E11",
+        "$type": "color"
+      }
+    },
+    "green": {
+      "400": {
+        "$value": "#5FCF94",
+        "$type": "color"
+      },
+      "600": {
+        "$value": "#1B7A4A",
+        "$type": "color"
+      }
+    },
+    "amber": {
+      "100": {
+        "$value": "#FCEFD2",
+        "$type": "color"
+      },
+      "400": {
+        "$value": "#F2B53A",
+        "$type": "color"
+      },
+      "700": {
+        "$value": "#8A5300",
+        "$type": "color"
+      },
+      "900": {
+        "$value": "#3A2600",
+        "$type": "color"
+      }
+    },
+    "red": {
+      "400": {
+        "$value": "#F08A8A",
+        "$type": "color"
+      },
+      "700": {
+        "$value": "#B42323",
+        "$type": "color"
+      }
+    }
+  },
+  "space": {
+    "0": {
+      "$value": 0,
+      "$type": "dimension"
+    },
+    "1": {
+      "$value": 4,
+      "$type": "dimension"
+    },
+    "2": {
+      "$value": 8,
+      "$type": "dimension"
+    },
+    "3": {
+      "$value": 12,
+      "$type": "dimension"
+    },
+    "4": {
+      "$value": 16,
+      "$type": "dimension"
+    },
+    "6": {
+      "$value": 24,
+      "$type": "dimension"
+    },
+    "8": {
+      "$value": 32,
+      "$type": "dimension"
+    }
+  },
+  "radius": {
+    "0": {
+      "$value": 0,
+      "$type": "dimension"
+    },
+    "1": {
+      "$value": 4,
+      "$type": "dimension"
+    },
+    "2": {
+      "$value": 8,
+      "$type": "dimension"
+    },
+    "3": {
+      "$value": 12,
+      "$type": "dimension"
+    },
+    "full": {
+      "$value": 999,
+      "$type": "dimension"
+    }
+  },
+  "size": {
+    "16": {
+      "$value": 16,
+      "$type": "dimension"
+    },
+    "40": {
+      "$value": 40,
+      "$type": "dimension"
+    },
+    "44": {
+      "$value": 44,
+      "$type": "dimension"
+    },
+    "72": {
+      "$value": 72,
+      "$type": "dimension"
+    }
+  },
+  "borderWidth": {
+    "1": {
+      "$value": 1,
+      "$type": "dimension"
+    },
+    "4": {
+      "$value": 4,
+      "$type": "dimension"
+    }
+  },
+  "fontSize": {
+    "12": {
+      "$value": 12,
+      "$type": "dimension"
+    },
+    "14": {
+      "$value": 14,
+      "$type": "dimension"
+    },
+    "16": {
+      "$value": 16,
+      "$type": "dimension"
+    }
+  },
+  "lineHeight": {
+    "16": {
+      "$value": 16,
+      "$type": "dimension"
+    },
+    "20": {
+      "$value": 20,
+      "$type": "dimension"
+    },
+    "24": {
+      "$value": 24,
+      "$type": "dimension"
+    }
+  },
+  "fontWeight": {
+    "regular": {
+      "$value": "400",
+      "$type": "fontWeight"
+    },
+    "medium": {
+      "$value": "500",
+      "$type": "fontWeight"
+    },
+    "semibold": {
+      "$value": "600",
+      "$type": "fontWeight"
+    }
+  },
+  "fontScale": {
+    "200": {
+      "$value": 2,
+      "$type": "number"
+    }
+  },
+  "duration": {
+    "150": {
+      "$value": 150,
+      "$type": "duration"
+    },
+    "250": {
+      "$value": 250,
+      "$type": "duration"
+    },
+    "1000": {
+      "$value": 1000,
+      "$type": "duration"
+    }
+  },
+  "opacity": {
+    "40": {
+      "$value": 0.4,
+      "$type": "number"
+    },
+    "100": {
+      "$value": 1,
+      "$type": "number"
+    }
+  }
+}
