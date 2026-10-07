@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# local workflow notes
+odd/
+
+# private source material (exercise statement, job offer) — never commit
+.private/
