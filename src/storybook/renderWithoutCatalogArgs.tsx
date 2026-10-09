@@ -10,9 +10,18 @@ export const omitCatalogArgs = <T extends Args>(args: T): Omit<T, "themeMode" | 
 
 /**
  * Project-level render: components never receive the catalog args as props. Stories with their
- * own `render` call `omitCatalogArgs` themselves.
+ * own `render` call `omitCatalogArgs` themselves. A story with neither fails loudly instead of
+ * rendering an empty canvas.
  */
-export const renderWithoutCatalogArgs: NonNullable<Preview["render"]> = (args, { component }) => {
+export const renderWithoutCatalogArgs: NonNullable<Preview["render"]> = (
+  args,
+  { component, title, name },
+) => {
   const Component = component as ComponentType<Args> | undefined;
-  return Component ? <Component {...omitCatalogArgs(args)} /> : <></>;
+  if (!Component) {
+    throw new Error(
+      `Story "${title} › ${name}" needs a \`component\` in its meta or its own \`render\`.`,
+    );
+  }
+  return <Component {...omitCatalogArgs(args)} />;
 };

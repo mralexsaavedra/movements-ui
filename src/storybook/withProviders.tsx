@@ -12,6 +12,9 @@ import { style } from "./withProviders.style";
 /** Fixed zone so formatted dates do not depend on the device running the catalog or CI. */
 export const STORYBOOK_TIME_ZONE = "Europe/Madrid";
 
+/** Lets the catalog test assert that a story rendered content inside the always-present canvas. */
+export const STORYBOOK_CANVAS_TEST_ID = "storybook-canvas";
+
 const LOCALES: Readonly<Record<Language, string>> = { es: "es-ES", en: "en-GB" };
 
 /**
@@ -56,7 +59,11 @@ export const resolveCatalogSettings = (
 
 function Canvas({ children }: { readonly children: ReactNode }) {
   const styles = style(useTheme());
-  return <View style={styles.canvas}>{children}</View>;
+  return (
+    <View style={styles.canvas} testID={STORYBOOK_CANVAS_TEST_ID}>
+      {children}
+    </View>
+  );
 }
 
 /** Theme (light/dark), UI language (es/en) with a fixed time zone, and a padded themed canvas. */

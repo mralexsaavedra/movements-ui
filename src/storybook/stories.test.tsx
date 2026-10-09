@@ -8,6 +8,7 @@ import path from "node:path";
 import * as movementCardStories from "@/features/movements/ui/components/movementCard/MovementCard.stories";
 
 import * as preview from "../../.rnstorybook/preview";
+import { STORYBOOK_CANVAS_TEST_ID } from "./withProviders";
 
 // Same decorators, argTypes and render as the on-device catalog.
 setProjectAnnotations(preview);
@@ -49,22 +50,41 @@ describe("Storybook stories", () => {
   it.each(cases)("renders %s with the catalog decorators", async (_name, Story) => {
     await render(<Story />);
 
-    expect(screen.toJSON()).not.toBeNull();
+    // The canvas always renders, so assert the story put something inside it.
+    expect(screen.getByTestId(STORYBOOK_CANVAS_TEST_ID)).not.toBeEmptyElement();
   });
 
   it.each(cases)("renders %s in dark mode and English", async (_name, Story) => {
     await render(<Story themeMode="dark" language="en" />);
 
-    expect(screen.toJSON()).not.toBeNull();
+    expect(screen.getByTestId(STORYBOOK_CANVAS_TEST_ID)).not.toBeEmptyElement();
   });
 
-  it("applies the language parameter through the global decorator", async () => {
-    const { GallerySpanish, GalleryEnglish } = composeStories(movementCardStories);
+  describe("language precedence", () => {
+    // Spanish is also the decorator fallback, so prove the story parameter against an English
+    // project default (merged over the global annotations set above).
+    const { Pending, GallerySpanish } = composeStories(movementCardStories, {
+      parameters: { language: "en" },
+    });
+    const GalleryWithArgs = GallerySpanish as ComposedStory;
 
-    await render(<GallerySpanish />);
-    expect(screen.getAllByText("Pendiente").length).toBeGreaterThan(0);
+    it("uses the project parameter when the story sets none", async () => {
+      await render(<Pending />);
 
-    await render(<GalleryEnglish />);
-    expect(screen.getAllByText("Pending").length).toBeGreaterThan(0);
+      expect(screen.getByText("Pending")).toBeOnTheScreen();
+    });
+
+    it("lets the story parameter override the project parameter", async () => {
+      await render(<GallerySpanish />);
+
+      expect(screen.getAllByText("Pendiente").length).toBeGreaterThan(0);
+    });
+
+    it("lets an arg override the story parameter", async () => {
+      await render(<GalleryWithArgs language="en" />);
+
+      expect(screen.getAllByText("Pending").length).toBeGreaterThan(0);
+      expect(screen.queryByText("Pendiente")).not.toBeOnTheScreen();
+    });
   });
 });
