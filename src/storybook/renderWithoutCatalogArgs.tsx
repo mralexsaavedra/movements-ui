@@ -2,12 +2,17 @@ import type { ComponentType } from "react";
 
 import type { Args, Preview } from "@storybook/react-native";
 
+/** Removes the catalog args (`themeMode`, `language`), which only configure `withProviders`. */
+export const omitCatalogArgs = <T extends Args>(args: T): Omit<T, "themeMode" | "language"> => {
+  const { themeMode: _themeMode, language: _language, ...componentArgs } = args;
+  return componentArgs;
+};
+
 /**
- * Project-level render: drops the catalog args (`themeMode`, `language`), which only configure
- * the providers in `withProviders`, so components never receive props they do not declare.
+ * Project-level render: components never receive the catalog args as props. Stories with their
+ * own `render` call `omitCatalogArgs` themselves.
  */
 export const renderWithoutCatalogArgs: NonNullable<Preview["render"]> = (args, { component }) => {
-  const { themeMode: _themeMode, language: _language, ...componentArgs } = args;
   const Component = component as ComponentType<Args> | undefined;
-  return Component ? <Component {...componentArgs} /> : <></>;
+  return Component ? <Component {...omitCatalogArgs(args)} /> : <></>;
 };
