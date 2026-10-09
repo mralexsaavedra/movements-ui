@@ -211,7 +211,24 @@ Decisions:
 - **Font scaling**: see Typography; layout tested at 200 %.
 - **Touch targets**: ≥ 44 × 44 dp (`size.touchTarget`).
 
-## 8. Open questions for the design team
+## 8. Storybook (living spec)
+
+The stories are the executable version of the state matrix in §6: when this document and a story
+disagree, the story shows what ships. Run `pnpm storybook` (Expo with
+`EXPO_PUBLIC_STORYBOOK_ENABLED=true`) and open it in Expo Go or a dev build.
+
+| Story file                                                   | What it documents                                                        |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| `design-system/components/itemCard/ItemCard`                 | Every §6 state from plain props, broken image, press action, `AllStates` |
+| `design-system/components/itemCard/ItemCardSkeleton`         | Loading row, single and a list of six                                    |
+| `design-system/components/badge/Badge`                       | Each tone                                                                |
+| `features/movements/ui/components/movementCard/MovementCard` | Contract fixtures through the mapper, Spanish and English galleries      |
+
+Every story has **Theme** (light/dark) and **Language** (es/en) controls from the global decorator
+(`src/storybook/withProviders.tsx`); dates use the fixed `Europe/Madrid` zone so they read the same
+on any device. `src/storybook/stories.test.tsx` renders every story in both themes in CI.
+
+## 9. Open questions for the design team
 
 1. Currency display: symbol vs ISO code, position, and decimals for zero-decimal currencies
    (JPY) — follow device locale or account locale?
