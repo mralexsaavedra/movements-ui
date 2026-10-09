@@ -20,10 +20,10 @@ const movement: Movement = {
 };
 
 const providers =
-  (language: "es" | "en", locale: string) =>
+  (language: "es" | "en", locale: string, timeZone = "UTC") =>
   ({ children }: { readonly children: ReactNode }) => (
     <ThemeProvider mode="light">
-      <I18nProvider value={createI18n(language, locale)}>{children}</I18nProvider>
+      <I18nProvider value={createI18n(language, locale, timeZone)}>{children}</I18nProvider>
     </ThemeProvider>
   );
 
@@ -33,7 +33,7 @@ const icuText = (text: string) =>
 
 describe("MovementCard", () => {
   it("renders a pending, flagged outbound movement in Spanish", async () => {
-    await render(<MovementCard movement={movement} timeZone="UTC" />, {
+    await render(<MovementCard movement={movement} />, {
       wrapper: providers("es", "es-ES"),
     });
 
@@ -51,7 +51,7 @@ describe("MovementCard", () => {
   });
 
   it("renders the same movement in English", async () => {
-    await render(<MovementCard movement={movement} timeZone="UTC" />, {
+    await render(<MovementCard movement={movement} />, {
       wrapper: providers("en", "en-GB"),
     });
 
@@ -73,5 +73,22 @@ describe("MovementCard", () => {
     });
 
     expect(screen.getByRole("button")).toBeOnTheScreen();
+  });
+
+  it("moves to the next day when the provider's time zone changes", async () => {
+    const lateNightUtc = { ...movement, date: new Date("2026-10-07T23:30:00Z") };
+    const { rerender } = await render(<MovementCard movement={lateNightUtc} />, {
+      wrapper: providers("en", "en-GB", "UTC"),
+    });
+    expect(screen.getByText("Groceries · 7 Oct 2026")).toBeOnTheScreen();
+
+    const Madrid = providers("en", "en-GB", "Europe/Madrid");
+    await rerender(
+      <Madrid>
+        <MovementCard movement={lateNightUtc} />
+      </Madrid>,
+    );
+
+    expect(screen.getByText("Groceries · 8 Oct 2026")).toBeOnTheScreen();
   });
 });

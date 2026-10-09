@@ -4,8 +4,8 @@ import { normalizeSpaces } from "@/shared/testing/normalizeSpaces";
 
 import { toItemCardProps } from "./toItemCardProps";
 
-const english = createI18n("en", "en-GB");
-const spanish = createI18n("es", "es-ES");
+const english = createI18n("en", "en-GB", "UTC");
+const spanish = createI18n("es", "es-ES", "UTC");
 
 const buildMovement = (overrides: Partial<Movement> = {}): Movement => ({
   id: "mv-1",
@@ -20,7 +20,7 @@ const buildMovement = (overrides: Partial<Movement> = {}): Movement => ({
 });
 
 const map = (movement: Movement, i18n = english) => {
-  const props = toItemCardProps(movement, i18n, { timeZone: "UTC" });
+  const props = toItemCardProps(movement, i18n);
   return {
     ...props,
     amount: { ...props.amount, text: normalizeSpaces(props.amount.text) },
@@ -123,5 +123,16 @@ describe("toItemCardProps", () => {
 
     expect(props.amount.text).toBe(text);
     expect(props.accessibilityLabel).toBe(label);
+  });
+
+  it("decides the calendar day in the i18n time zone", () => {
+    const lateNightUtc = buildMovement({ date: new Date("2026-10-07T23:30:00Z") });
+
+    expect(map(lateNightUtc, createI18n("es", "es-ES", "UTC")).subtitle).toBe(
+      "Salary · 7 oct 2026",
+    );
+    expect(map(lateNightUtc, createI18n("es", "es-ES", "Europe/Madrid")).subtitle).toBe(
+      "Salary · 8 oct 2026",
+    );
   });
 });

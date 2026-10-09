@@ -12,11 +12,6 @@ import type { I18n } from "@/shared/i18n";
 
 import { getInitials } from "./getInitials";
 
-export interface ToItemCardPropsOptions {
-  /** Pins the calendar day (tests, stories). Defaults to the device's time zone. */
-  readonly timeZone?: string;
-}
-
 /** View-model props for `ItemCard`: everything the card shows is decided here, not in the UI. */
 export type MovementCardViewModel = Omit<ItemCardProps, "onPress">;
 
@@ -32,8 +27,7 @@ const amountTone = (movement: Movement): ItemCardAmountTone => {
  */
 export const toItemCardProps = (
   movement: Movement,
-  { t, locale }: I18n,
-  { timeZone }: ToItemCardPropsOptions = {},
+  { t, locale, timeZone }: I18n,
 ): MovementCardViewModel => {
   const copy = t.movements;
   const isPending = movement.status === "pending";

@@ -18,9 +18,12 @@ export function useReduceMotion(): boolean {
       setReduceMotion(enabled);
     });
     // A change event that arrives first is newer than the initial read: keep it.
-    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (mounted && !changedByEvent) setReduceMotion(enabled);
-    });
+    // If the setting cannot be read, keep the default (motion on) rather than fail.
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((enabled) => {
+        if (mounted && !changedByEvent) setReduceMotion(enabled);
+      })
+      .catch(() => undefined);
 
     return () => {
       mounted = false;

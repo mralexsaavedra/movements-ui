@@ -67,4 +67,15 @@ describe("useReduceMotion", () => {
     expect(result.current).toBe(false);
     expect(consoleError).not.toHaveBeenCalled();
   });
+
+  it("stays off when the system setting cannot be read", async () => {
+    jest
+      .spyOn(AccessibilityInfo, "isReduceMotionEnabled")
+      .mockRejectedValue(new Error("unavailable"));
+
+    const { result } = await renderHook(() => useReduceMotion());
+    await act(async () => undefined);
+
+    expect(result.current).toBe(false);
+  });
 });

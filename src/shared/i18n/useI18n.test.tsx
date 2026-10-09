@@ -3,22 +3,27 @@ import type { ReactNode } from "react";
 import { Text } from "react-native";
 
 import { render, renderHook, screen } from "@testing-library/react-native";
-import { useLocales } from "expo-localization";
+import { useCalendars, useLocales } from "expo-localization";
 
 import { I18nProvider } from "./I18nProvider";
 import { createI18n } from "./createI18n";
 import { useI18n } from "./useI18n";
 
-jest.mock("expo-localization", () => ({ useLocales: jest.fn() }));
+jest.mock("expo-localization", () => ({ useLocales: jest.fn(), useCalendars: jest.fn() }));
 
 const mockedUseLocales = jest.mocked(useLocales);
+const mockedUseCalendars = jest.mocked(useCalendars);
+const deviceCalendar = (timeZone: string | null) =>
+  [{ timeZone }] as unknown as ReturnType<typeof useCalendars>;
+
+beforeEach(() => mockedUseCalendars.mockReturnValue(deviceCalendar("Europe/Madrid")));
 const deviceLocale = (languageTag: string) =>
   ({ languageTag, languageCode: languageTag.split("-")[0] ?? null }) as ReturnType<
     typeof useLocales
   >[number];
 
 function SpanishSpain({ children }: { readonly children: ReactNode }) {
-  return <I18nProvider value={createI18n("es", "es-ES")}>{children}</I18nProvider>;
+  return <I18nProvider value={createI18n("es", "es-ES", "UTC")}>{children}</I18nProvider>;
 }
 
 function Title() {
@@ -58,11 +63,33 @@ describe("I18nProvider", () => {
 
     expect(result.current.language).toBe("es");
     expect(result.current.locale).toBe("es-ES");
+    expect(result.current.timeZone).toBe("UTC");
     expect(result.current.t.app.title).toBe("Movimientos");
   });
 
   it("returns the same i18n object for the same language and locale", () => {
-    expect(createI18n("en", "en-GB")).toBe(createI18n("en", "en-GB"));
+    expect(createI18n("en", "en-GB", "UTC")).toBe(createI18n("en", "en-GB", "UTC"));
+    expect(createI18n("en", "en-GB", "UTC")).not.toBe(createI18n("en", "en-GB", "Asia/Tokyo"));
+  });
+});
+
+describe("I18nProvider time zone", () => {
+  it("takes the device calendar's time zone", async () => {
+    mockedUseLocales.mockReturnValue([deviceLocale("es-ES")]);
+    mockedUseCalendars.mockReturnValue(deviceCalendar("America/Bogota"));
+
+    const { result } = await renderHook(() => useI18n(), { wrapper: I18nProvider });
+
+    expect(result.current.timeZone).toBe("America/Bogota");
+  });
+
+  it("falls back to the runtime's zone when the device reports none", async () => {
+    mockedUseLocales.mockReturnValue([deviceLocale("en-GB")]);
+    mockedUseCalendars.mockReturnValue(deviceCalendar(null));
+
+    const { result } = await renderHook(() => useI18n(), { wrapper: I18nProvider });
+
+    expect(result.current.timeZone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
   });
 });
 

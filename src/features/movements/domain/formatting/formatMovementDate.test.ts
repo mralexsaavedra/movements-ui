@@ -33,20 +33,27 @@ describe("formatMovementDateForAccessibility", () => {
   );
 });
 
-describe("device time zone", () => {
+describe("formatter cache", () => {
   afterEach(() => jest.restoreAllMocks());
 
-  it("follows a device time zone change instead of the zone seen on first use", () => {
-    const lateNightUtc = new Date("2026-10-07T23:30:00Z");
-    const resolvedZone = jest.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions");
+  it("builds one Intl formatter per locale, time zone and style, however many dates it formats", () => {
+    const construct = jest.spyOn(Intl, "DateTimeFormat");
+    // A combination no other test uses, so the cache starts cold.
+    const timeZone = "Pacific/Kiritimati";
 
-    resolvedZone.mockReturnValue({ timeZone: "UTC" } as Intl.ResolvedDateTimeFormatOptions);
-    expect(formatMovementDate(lateNightUtc, "es-ES")).toBe("7 oct 2026");
+    for (let day = 1; day <= 20; day += 1) {
+      formatMovementDate(new Date(Date.UTC(2026, 9, day, 12)), "es-ES", timeZone);
+    }
 
-    resolvedZone.mockReturnValue({
-      timeZone: "Europe/Madrid",
-    } as Intl.ResolvedDateTimeFormatOptions);
-    expect(formatMovementDate(lateNightUtc, "es-ES")).toBe("8 oct 2026");
-    expect(formatMovementDateForAccessibility(lateNightUtc, "en-GB")).toBe("8 October 2026");
+    expect(construct).toHaveBeenCalledTimes(1);
+  });
+
+  it("never reads the device time zone", () => {
+    const resolvedOptions = jest.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions");
+
+    formatMovementDate(new Date("2026-10-07T12:00:00Z"), "en-GB", "UTC");
+    formatMovementDateForAccessibility(new Date("2026-10-07T12:00:00Z"), "en-GB", "UTC");
+
+    expect(resolvedOptions).not.toHaveBeenCalled();
   });
 });
