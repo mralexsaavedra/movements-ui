@@ -77,7 +77,7 @@ contract bugs.
 
 ### Choosing the backend
 
-The composition root (`src/app/dependencies.ts`) wires the repository from two env variables,
+The composition root (`src/composition/dependencies.ts`) wires the repository from two env variables,
 inlined by Expo at build time (put them in `.env.local`, which is gitignored):
 
 | Variable                   | Values           | Default |

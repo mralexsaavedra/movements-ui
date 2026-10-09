@@ -127,7 +127,7 @@ injection (provider/context), never instantiating adapters inside components.
 - Mappers convert DTO → domain (e.g. ISO string → `Date`, `type` → `direction`); the sign is applied at formatting time.
 - The app runs against a deterministic seeded mock **transport** (`HttpClient` serving raw JSON for
   `GET /items`), so validation and mapping always run; `EXPO_PUBLIC_API_MODE=http` switches to `fetch`.
-- `console` is only allowed in the composition root (`src/app/`), behind `__DEV__`.
+- `console` is only allowed in the composition root (`src/composition/`), behind `__DEV__`.
 - Money is formatted with `Intl.NumberFormat` using the contract currency (`domain/formatting/`): inbound `+`, outbound `−` (U+2212), zero unsigned; default locale `es-ES`, injectable.
 - Invalid envelope → `ContractError` (page fails, retry); invalid item → dropped, counted in `invalidCount`, reported via the `ContractViolationReporter` port without raw values.
 - React Query provides stale-while-revalidate: cached data renders instantly, refetch in background.

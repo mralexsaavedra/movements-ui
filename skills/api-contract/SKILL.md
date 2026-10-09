@@ -37,7 +37,7 @@ Item = { id, type: "inbound"|"outbound", status: "pending"|"confirmed",
 | HTTP repository           | `infrastructure/repositories/createHttpMovementRepository.ts`                     |
 | Mock transport            | `infrastructure/mock/` (generator, cursor, PRNG, `createMockMovementsHttpClient`) |
 | Transport port + fetch    | `src/shared/http/` (`HttpClient`, `HttpError`, `createFetchHttpClient`)           |
-| Composition root          | `src/app/dependencies.ts`                                                         |
+| Composition root          | `src/composition/dependencies.ts`                                                 |
 
 ## 1. DTO Types (manual, readonly)
 
