@@ -81,12 +81,13 @@ src/
 ├── features/
 │   └── movements/
 │       ├── domain/          # entities, repository port, errors, pure logic (formatting/)
-│       ├── infrastructure/  # DTO types, Zod schemas, mappers, HTTP repo, mock adapter
+│       ├── infrastructure/  # DTO types, Zod schemas, mappers, HTTP repo, mock/ transport
 │       └── ui/
 │           ├── components/  # presentational (itemCard/, movementList/)
 │           ├── hooks/       # query hooks + controller hooks
 │           └── views/       # screens composing hooks + components
-└── shared/              # cross-feature utils (queryClient, testing)
+├── shared/              # cross-feature utils (http/ client port + fetch, testing)
+└── app/                 # composition root: wires adapters from EXPO_PUBLIC_API_* env
 ```
 
 ### Dependency rule
@@ -124,7 +125,9 @@ injection (provider/context), never instantiating adapters inside components.
 - DTO types are written manually, `readonly`, mirroring the contract exactly (rationale vs codegen in the `api-contract` skill).
 - Every payload is parsed with Zod at the boundary; invalid data fails loudly, never leaks into UI.
 - Mappers convert DTO → domain (e.g. ISO string → `Date`, `type` → `direction`); the sign is applied at formatting time.
-- The app runs against a deterministic mock adapter, not a real backend.
+- The app runs against a deterministic seeded mock **transport** (`HttpClient` serving raw JSON for
+  `GET /items`), so validation and mapping always run; `EXPO_PUBLIC_API_MODE=http` switches to `fetch`.
+- `console` is only allowed in the composition root (`src/app/`), behind `__DEV__`.
 - Money is formatted with `Intl.NumberFormat` using the contract currency (`domain/formatting/`): inbound `+`, outbound `−` (U+2212), zero unsigned; default locale `es-ES`, injectable.
 - Invalid envelope → `ContractError` (page fails, retry); invalid item → dropped, counted in `invalidCount`, reported via the `ContractViolationReporter` port without raw values.
 - React Query provides stale-while-revalidate: cached data renders instantly, refetch in background.
