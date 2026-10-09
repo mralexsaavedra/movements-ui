@@ -89,7 +89,7 @@ src/
 │           ├── hooks/       # query hooks + controller hooks
 │           ├── providers/   # repository context (dependency injection)
 │           └── views/       # screens composing hooks + components
-├── shared/              # cross-feature utils (http/ client port + fetch, query/ cache policy, testing)
+├── shared/              # cross-feature utils (http/ client port + fetch, query/ cache policy, i18n/, testing)
 └── composition/         # composition root: adapters from EXPO_PUBLIC_API_* env, AppProviders
 ```
 
@@ -103,6 +103,10 @@ injection (provider/context), never instantiating adapters inside components.
 
 - Path alias `@/` → `src/`. Named exports only. `import type` for types. No `any`.
 - Props are `readonly`. Presentational components never fetch data.
+- UI copy lives only in `src/shared/i18n/dictionaries/` (`en` is the type source, `es` must match
+  its keys). `I18nProvider` follows the device: any Spanish locale → `es`, anything else → `en`;
+  formatting keeps the device tag when it speaks the UI language (`es-MX`), else `es-ES`/`en-GB`.
+  Read copy with `useI18n().t`; tests and stories pass `value={createI18n(language, locale)}`.
 - Component folders camelCase, files PascalCase:
   `itemCard/{ItemCard.tsx, ItemCard.style.ts, ItemCard.stories.tsx, ItemCard.test.tsx, index.ts}`.
 - One hook per file. `queryKeys` factory centralized and `as const`.
@@ -131,7 +135,7 @@ injection (provider/context), never instantiating adapters inside components.
 - The app runs against a deterministic seeded mock **transport** (`HttpClient` serving raw JSON for
   `GET /items`), so validation and mapping always run; `EXPO_PUBLIC_API_MODE=http` switches to `fetch`.
 - `console` is only allowed in the composition root (`src/composition/`), behind `__DEV__`.
-- Money is formatted with `Intl.NumberFormat` using the contract currency (`domain/formatting/`): inbound `+`, outbound `−` (U+2212), zero unsigned; default locale `es-ES`, injectable.
+- Money is formatted with `Intl.NumberFormat` using the contract currency (`domain/formatting/`): inbound `+`, outbound `−` (U+2212), zero unsigned; default locale `es-ES`, injectable (the UI passes the `I18nProvider` locale).
 - Invalid envelope → `ContractError` (page fails, retry); invalid item → dropped, counted in `invalidCount`, reported via the `ContractViolationReporter` port without raw values.
 - React Query provides stale-while-revalidate: cached data renders instantly, refetch in background.
   Cache policy constants live in `src/shared/query/cachePolicy.ts`; retries only for network/5xx.
