@@ -87,7 +87,7 @@ src/
 │           ├── hooks/       # query hooks + controller hooks
 │           └── views/       # screens composing hooks + components
 ├── shared/              # cross-feature utils (http/ client port + fetch, testing)
-└── app/                 # composition root: wires adapters from EXPO_PUBLIC_API_* env
+└── composition/         # composition root: wires adapters from EXPO_PUBLIC_API_* env
 ```
 
 ### Dependency rule

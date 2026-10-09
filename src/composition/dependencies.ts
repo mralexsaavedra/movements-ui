@@ -33,10 +33,11 @@ const readProcessEnv = (): ApiEnv => ({
 
 /** Mock by default; a misconfigured HTTP mode fails at startup instead of on the first request. */
 export const readApiConfig = (env: ApiEnv = readProcessEnv()): ApiConfig => {
-  const mode = env.EXPO_PUBLIC_API_MODE ?? "mock";
+  // An empty value (e.g. `EXPO_PUBLIC_API_MODE=` copied from an example file) means "unset".
+  const mode = env.EXPO_PUBLIC_API_MODE?.trim() || "mock";
   if (mode === "mock") return { mode };
   if (mode === "http") {
-    const baseUrl = env.EXPO_PUBLIC_API_BASE_URL;
+    const baseUrl = env.EXPO_PUBLIC_API_BASE_URL?.trim();
     if (!baseUrl)
       throw new Error("EXPO_PUBLIC_API_BASE_URL is required when EXPO_PUBLIC_API_MODE=http");
     return { mode, baseUrl };

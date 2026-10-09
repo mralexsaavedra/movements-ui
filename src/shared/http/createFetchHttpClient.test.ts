@@ -94,6 +94,22 @@ describe("createFetchHttpClient", () => {
     await expect(client.get("/items", { signal: controller.signal })).rejects.toBe(abortError);
   });
 
+  it("rethrows the abort error when the request is cancelled while reading the body", async () => {
+    const controller = new AbortController();
+    const abortError = Object.assign(new Error("Aborted"), { name: "AbortError" });
+    const response = jsonResponse({});
+    jest.spyOn(response, "json").mockImplementation(() => {
+      controller.abort();
+      return Promise.reject(abortError);
+    });
+    const client = createFetchHttpClient({
+      baseUrl: "https://api.example.com",
+      fetch: createFetchStub(response),
+    });
+
+    await expect(client.get("/items", { signal: controller.signal })).rejects.toBe(abortError);
+  });
+
   it("rejects a successful response whose body is not JSON with an HttpError", async () => {
     const fetchStub = createFetchStub(new Response("<html>", { status: 200 }));
     const client = createFetchHttpClient({ baseUrl: "https://api.example.com", fetch: fetchStub });

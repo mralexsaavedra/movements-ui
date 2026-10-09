@@ -37,7 +37,9 @@ export const createFetchHttpClient = ({
 
     try {
       return (await response.json()) as unknown;
-    } catch {
+    } catch (error) {
+      // The body is streamed after the headers, so a cancellation can land here too.
+      if (signal?.aborted) throw error;
       throw new HttpError(response.status, "Response body is not valid JSON");
     }
   },

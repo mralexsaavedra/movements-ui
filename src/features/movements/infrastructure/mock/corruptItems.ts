@@ -3,12 +3,12 @@ import { chance, createRandom, pickWeighted } from "./random";
 
 type Corruption = (item: ItemDto) => Record<string, unknown>;
 
-/** Realistic contract violations; each one is rejected by `itemSchema`. */
-const CORRUPTIONS: readonly (readonly [Corruption, number])[] = [
+/** Realistic contract violations; each one is rejected by `itemSchema` (see the test). */
+export const CORRUPTIONS: readonly (readonly [Corruption, number])[] = [
   [(item) => ({ ...item, amount: { ...item.amount, value: -item.amount.value - 1 } }), 1],
   [(item) => ({ ...item, amount: { ...item.amount, currency: "euro" } }), 1],
   [(item) => ({ ...item, label: { ...item.label, name: "" } }), 1],
-  [(item) => ({ ...item, date: item.date.replace(/\.\d{3}Z$/, "") }), 1],
+  [(item) => ({ ...item, date: item.date.replace(/(Z|[+-]\d{2}:\d{2})$/, "") }), 1],
   [(item) => ({ ...item, type: "refund" }), 1],
 ];
 
