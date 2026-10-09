@@ -221,3 +221,5 @@ Decisions:
 4. Should pending outbound amounts count against the displayed balance (affects emphasis)?
 5. Category glyph set: is there an icon library, or do we keep initials as the only fallback?
 6. Brand palette: are these neutral/green/amber ramps placeholders to be replaced by brand tokens?
+7. Categories arrive as free text in the contract, so they are shown untranslated. Localising them
+   (and picking a category glyph) needs a category enum or a translation key from the API.

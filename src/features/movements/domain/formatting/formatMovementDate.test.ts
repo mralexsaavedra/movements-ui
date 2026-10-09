@@ -1,4 +1,4 @@
-import { formatMovementDate } from "./formatMovementDate";
+import { formatMovementDate, formatMovementDateForAccessibility } from "./formatMovementDate";
 
 describe("formatMovementDate", () => {
   const date = new Date("2026-10-07T09:15:00Z");
@@ -17,4 +17,18 @@ describe("formatMovementDate", () => {
     expect(formatMovementDate(lateNightUtc, "es-ES", "UTC")).toBe("7 oct 2026");
     expect(formatMovementDate(lateNightUtc, "es-ES", "Europe/Madrid")).toBe("8 oct 2026");
   });
+});
+
+describe("formatMovementDateForAccessibility", () => {
+  const date = new Date("2026-10-07T09:15:00Z");
+
+  it.each([
+    ["es-ES", "7 de octubre de 2026"],
+    ["en-GB", "7 October 2026"],
+  ])(
+    "spells the month out in %s so screen readers do not read an abbreviation",
+    (locale, expected) => {
+      expect(formatMovementDateForAccessibility(date, locale, "UTC")).toBe(expected);
+    },
+  );
 });

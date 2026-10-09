@@ -85,7 +85,7 @@ src/
 │       ├── testing/         # feature test helpers (query wrapper, controllable transport)
 │       └── ui/
 │           ├── cache/       # query keys, JSON-safe cache snapshot, `select`
-│           ├── components/  # presentational (itemCard/, movementList/)
+│           ├── components/  # presentational adapters over the design system (movementCard/, movementList/)
 │           ├── hooks/       # query hooks + controller hooks
 │           ├── providers/   # repository context (dependency injection)
 │           └── views/       # screens composing hooks + components
