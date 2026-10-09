@@ -34,6 +34,7 @@ const setup = async (
 
 describe("useMovementList", () => {
   afterEach(async () => {
+    jest.restoreAllMocks();
     // Hooks are still mounted here (cleanup runs later), so the update goes through act.
     await act(async () => {
       onlineManager.setOnline(true);
@@ -147,6 +148,9 @@ describe("useMovementList", () => {
   });
 
   it("keeps every loaded page and exposes the error when a refresh fails", async () => {
+    // Same-millisecond timestamps (common with a zero-latency transport): the failure must still
+    // count as newer than the data it failed to replace.
+    jest.spyOn(Date, "now").mockReturnValue(1_760_000_000_000);
     const { result, transport } = await setup({ total: 45 });
     await waitFor(() => expect(result.current.items).toHaveLength(20));
     await act(async () => result.current.loadMore());

@@ -46,7 +46,8 @@ type CachedPages = InfiniteData<MovementsPageSnapshot, string | undefined>;
 
 interface RefreshFailure {
   readonly error: Error;
-  readonly at: number;
+  /** `dataUpdatedAt` of the cached list when the refresh failed (a version, not a clock). */
+  readonly dataUpdatedAt: number;
 }
 
 const shouldSkipEmptyPages = (
@@ -91,7 +92,9 @@ export const useMovementList = (): MovementListController => {
 
   // A refresh failure stays relevant until newer data lands in the cache.
   const visibleRefreshError =
-    refreshFailure && refreshFailure.at > query.dataUpdatedAt ? refreshFailure.error : null;
+    refreshFailure && refreshFailure.dataUpdatedAt === query.dataUpdatedAt
+      ? refreshFailure.error
+      : null;
 
   const status = ((): MovementListStatus => {
     if (query.data === undefined) return query.isError && !isFetching ? "error" : "loading";
@@ -125,7 +128,14 @@ export const useMovementList = (): MovementListController => {
       });
       setRefreshFailure(null);
     } catch (error) {
-      setRefreshFailure({ error: toError(error), at: Date.now() });
+      // Compare against the data the refresh failed to replace, not the wall clock: with a
+      // fast transport both can share a millisecond, which would hide the error.
+      setRefreshFailure({
+        error: toError(error),
+        dataUpdatedAt:
+          queryClient.getQueryState(movementsKeys.list({ limit: MOVEMENTS_PAGE_SIZE }))
+            ?.dataUpdatedAt ?? 0,
+      });
     } finally {
       setIsRefreshing(false);
     }
