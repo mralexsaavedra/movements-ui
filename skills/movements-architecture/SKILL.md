@@ -18,9 +18,10 @@ src/
 ├── design-system/{tokens,theme,components}   # shared, feature-agnostic
 ├── features/<feature>/
 │   ├── domain/           # entities, value objects, ports, pure functions
-│   ├── infrastructure/   # dto/, schemas/, mappers/, repositories/ (http + mock)
+│   ├── infrastructure/   # dto/, schemas/, mappers/, repositories/ (http), mock/ (fake transport)
 │   └── ui/{components,hooks,views}
-└── shared/               # queryClient, test utils (cross-feature only)
+├── shared/               # http/ (HttpClient port + fetch adapter), testing (cross-feature only)
+└── composition/          # composition root: picks adapters from env (dependencies.ts)
 ```
 
 ## Dependency Rule
@@ -31,6 +32,7 @@ src/
 | `infrastructure` | `domain`, Zod, `shared`                      | `ui`, React components                        |
 | `ui`             | `domain` types, `design-system`, React Query | concrete adapters (inject them)               |
 | `design-system`  | tokens, RN                                   | any `features/*`                              |
+| `composition`    | everything (wires adapters)                  | — (keep it to wiring; no logic)               |
 
 Repository implementations are injected through a provider so tests/stories can swap them:
 
@@ -63,7 +65,10 @@ export const useMovementRepository = (): MovementRepository => {
 | Contract type mirroring JSON      | `features/movements/infrastructure/dto/`          |
 | Zod schema                        | `features/movements/infrastructure/schemas/`      |
 | DTO → domain conversion           | `features/movements/infrastructure/mappers/`      |
-| HTTP or mock repository           | `features/movements/infrastructure/repositories/` |
+| HTTP repository                   | `features/movements/infrastructure/repositories/` |
+| Mock transport / seeded data      | `features/movements/infrastructure/mock/`         |
+| Generic transport (HTTP client)   | `shared/http/`                                    |
+| Adapter wiring, env, console      | `composition/dependencies.ts` (composition root)  |
 | Presentational feature component  | `features/movements/ui/components/<camelName>/`   |
 | Query or controller hook          | `features/movements/ui/hooks/use<Name>.ts`        |
 | Screen                            | `features/movements/ui/views/<Name>View.tsx`      |

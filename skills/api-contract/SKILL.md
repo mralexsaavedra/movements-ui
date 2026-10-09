@@ -34,6 +34,10 @@ Item = { id, type: "inbound"|"outbound", status: "pending"|"confirmed",
 | Invalid-data policy       | `infrastructure/parseMovementsPage.ts`                                            |
 | Reusable fixtures         | `infrastructure/__fixtures__/itemDtos.ts`                                         |
 | Entity, port, errors      | `domain/{Movement,MovementRepository,ContractError,ContractViolationReporter}.ts` |
+| HTTP repository           | `infrastructure/repositories/createHttpMovementRepository.ts`                     |
+| Mock transport            | `infrastructure/mock/` (generator, cursor, PRNG, `createMockMovementsHttpClient`) |
+| Transport port + fetch    | `src/shared/http/` (`HttpClient`, `HttpError`, `createFetchHttpClient`)           |
+| Composition root          | `src/composition/dependencies.ts`                                                 |
 
 ## 1. DTO Types (manual, readonly)
 
@@ -82,39 +86,30 @@ export interface MovementRepository {
 }
 ```
 
-HTTP adapter: `fetch` → `json()` → `parseMovementsPage(raw, reporter)`.
+`createHttpMovementRepository({ httpClient, reporter })`: `httpClient.get("/items", { query:
+{ cursor, limit }, signal })` → `parseMovementsPage(raw, reporter)`. Transport errors
+(`HttpError`, status `0` = no response) and aborts propagate untouched.
 
-## 5. Mock Adapter (deterministic)
+## 5. Mock Transport (deterministic)
+
+The mock is an `HttpClient`, not a repository: it returns raw JSON so the real repository,
+Zod validation and mapper always run. Never return domain objects from a mock.
 
 ```ts
-// infrastructure/repositories/createMockMovementRepository.ts
-interface MockOptions {
-  readonly seed?: number; // same seed => same dataset
-  readonly total?: number; // e.g. 5000 rows
-  readonly latencyMs?: number; // simulate network
-  readonly failRate?: number; // 0..1 error injection
-  readonly reporter?: ContractViolationReporter; // where dropped items are reported
-}
-
-export const createMockMovementRepository = (opts: MockOptions = {}): MovementRepository => {
-  const { seed = 42, total = 5000, latencyMs = 400, failRate = 0 } = opts;
-  const rng = mulberry32(seed);
-  const dataset = Array.from({ length: total }, (_, i) => generateMovementDto(rng, i));
-
-  return {
-    getMovements: async ({ cursor, limit }) => {
-      await delay(latencyMs);
-      if (rng() < failRate) throw new NetworkError("Injected failure");
-      const start = cursor ? Number(decodeCursor(cursor)) : 0;
-      const items = dataset.slice(start, start + limit);
-      const next = start + limit < total ? encodeCursor(String(start + limit)) : null;
-      // Pass through the SAME parser as HTTP to exercise the boundary.
-      return parseMovementsPage({ items, nextCursor: next }, reporter);
-    },
-  };
-};
+const httpClient = createMockMovementsHttpClient({
+  seed: 42, // same seed => same dataset and failures
+  total: 5000, // 0 => empty list
+  latencyMs: 0, // 400 by default; 0 in tests; honours AbortSignal
+  failOnPage: 3, // always 503 on that page; or failureRate: 0..1 (seeded)
+  invalidItemRate: 0.1, // contract-violating items => dropped + counted
+});
+const repository = createHttpMovementRepository({ httpClient, reporter });
 ```
 
-- Cursor is opaque (base64 offset), never a page number exposed to UI.
-- Generator covers every state: long names, `imageUrl: null`, flagged, pending, multiple currencies.
-- Alternative is MSW intercepting `fetch`; record the choice and rationale in the ODD doc/README.
+- Generator (`generateItemDtos`) uses mulberry32 and a fixed `anchorDate`: no `Math.random`,
+  no `Date.now`. Covers every state: long names, `imageUrl: null`, flagged, pending,
+  several currencies (mostly EUR). Fictional merchants/people only.
+- Cursor is opaque to clients (base64 offset inside the mock); invalid/out-of-range → 400.
+  `limit` default 20, clamped to 100.
+- MSW intercepting `fetch` is the documented next step once a real backend exists
+  (`contract/README.md`).
