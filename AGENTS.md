@@ -82,12 +82,15 @@ src/
 │   └── movements/
 │       ├── domain/          # entities, repository port, errors, pure logic (formatting/)
 │       ├── infrastructure/  # DTO types, Zod schemas, mappers, HTTP repo, mock/ transport
+│       ├── testing/         # feature test helpers (query wrapper, controllable transport)
 │       └── ui/
+│           ├── cache/       # query keys, JSON-safe cache snapshot, `select`
 │           ├── components/  # presentational (itemCard/, movementList/)
 │           ├── hooks/       # query hooks + controller hooks
+│           ├── providers/   # repository context (dependency injection)
 │           └── views/       # screens composing hooks + components
-├── shared/              # cross-feature utils (http/ client port + fetch, testing)
-└── composition/         # composition root: wires adapters from EXPO_PUBLIC_API_* env
+├── shared/              # cross-feature utils (http/ client port + fetch, query/ cache policy, testing)
+└── composition/         # composition root: adapters from EXPO_PUBLIC_API_* env, AppProviders
 ```
 
 ### Dependency rule
@@ -131,6 +134,11 @@ injection (provider/context), never instantiating adapters inside components.
 - Money is formatted with `Intl.NumberFormat` using the contract currency (`domain/formatting/`): inbound `+`, outbound `−` (U+2212), zero unsigned; default locale `es-ES`, injectable.
 - Invalid envelope → `ContractError` (page fails, retry); invalid item → dropped, counted in `invalidCount`, reported via the `ContractViolationReporter` port without raw values.
 - React Query provides stale-while-revalidate: cached data renders instantly, refetch in background.
+  Cache policy constants live in `src/shared/query/cachePolicy.ts`; retries only for network/5xx.
+- The query cache is persisted to AsyncStorage (24 h, first page only, successful movements
+  queries). It stores a JSON-safe snapshot (ISO dates) revived in `select`; bump
+  `MOVEMENTS_CACHE_VERSION` when the contract or snapshot shape changes. Not encrypted yet
+  (production follow-up).
 
 ## Testing Criteria
 
