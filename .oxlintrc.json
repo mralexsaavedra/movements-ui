@@ -26,6 +26,7 @@
     "coverage/**",
     "ios/**",
     "android/**",
-    "storybook-static/**"
+    "storybook-static/**",
+    ".rnstorybook/storybook.requires.ts"
   ]
 }
