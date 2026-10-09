@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { type InfiniteData, onlineManager, useQueryClient } from "@tanstack/react-query";
 
@@ -36,7 +36,10 @@ export interface MovementListController {
   readonly loadMore: () => void;
   /** Pull-to-refresh: replaces the list with a fresh first page only if that fetch succeeds. */
   readonly refresh: () => Promise<void>;
-  /** Retries whatever failed: the failed next page, a failed refresh, or the whole list. */
+  /**
+   * Retries whatever failed: the failed next page, a failed refresh, or the whole list. Retrying a
+   * failed refresh while offline does nothing; `error` and `isOffline` stay set for the UI.
+   */
   readonly retry: () => void;
 }
 
@@ -70,6 +73,12 @@ export const useMovementList = (): MovementListController => {
   const isOnline = useIsOnline();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshFailure, setRefreshFailure] = useState<RefreshFailure | null>(null);
+  // Refs, not state: two calls in the same tick see the same render closure.
+  const inFlightRefresh = useRef<Promise<void> | null>(null);
+  const refreshAbort = useRef<AbortController | null>(null);
+
+  // A refresh runs outside React Query, so it is cancelled explicitly when the list unmounts.
+  useEffect(() => () => refreshAbort.current?.abort(), []);
 
   const items = query.data?.items ?? NO_MOVEMENTS;
   const pageCount = query.data?.pageCount ?? 0;
@@ -109,9 +118,7 @@ export const useMovementList = (): MovementListController => {
     void fetchNextPage();
   };
 
-  const refresh = async () => {
-    // Offline the fetch would pause indefinitely (and the spinner with it): `isOffline` explains.
-    if (isRefreshing || !onlineManager.isOnline()) return;
+  const runRefresh = async (signal: AbortSignal) => {
     setIsRefreshing(true);
     try {
       // Pull-to-refresh happens at the top of the list: fetch only the first page, and replace
@@ -119,6 +126,7 @@ export const useMovementList = (): MovementListController => {
       const firstPage = await fetchMovementsPageSnapshot(repository, {
         limit: MOVEMENTS_PAGE_SIZE,
         pageParam: undefined,
+        signal,
       });
       const queryKey = movementsKeys.list({ limit: MOVEMENTS_PAGE_SIZE });
       await queryClient.cancelQueries({ queryKey });
@@ -128,6 +136,7 @@ export const useMovementList = (): MovementListController => {
       });
       setRefreshFailure(null);
     } catch (error) {
+      if (signal.aborted) return;
       // Compare against the data the refresh failed to replace, not the wall clock: with a
       // fast transport both can share a millisecond, which would hide the error.
       setRefreshFailure({
@@ -137,8 +146,23 @@ export const useMovementList = (): MovementListController => {
             ?.dataUpdatedAt ?? 0,
       });
     } finally {
-      setIsRefreshing(false);
+      if (!signal.aborted) setIsRefreshing(false);
     }
+  };
+
+  const refresh = (): Promise<void> => {
+    // Offline the fetch would pause indefinitely (and the spinner with it): `isOffline` explains.
+    if (!onlineManager.isOnline()) return Promise.resolve();
+    // Concurrent pulls share the request in flight instead of racing to overwrite the cache.
+    if (inFlightRefresh.current) return inFlightRefresh.current;
+    const controller = new AbortController();
+    refreshAbort.current = controller;
+    const run = runRefresh(controller.signal).finally(() => {
+      inFlightRefresh.current = null;
+      refreshAbort.current = null;
+    });
+    inFlightRefresh.current = run;
+    return run;
   };
 
   const retry = () => {

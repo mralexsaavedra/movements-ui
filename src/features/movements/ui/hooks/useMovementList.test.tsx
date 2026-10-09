@@ -165,6 +165,41 @@ describe("useMovementList", () => {
     expect(result.current.error).toBeInstanceOf(HttpError);
   });
 
+  it("runs a single first-page request when refresh is triggered twice in the same tick", async () => {
+    const { result, transport } = await setup({ total: 45 });
+    await waitFor(() => expect(result.current.items).toHaveLength(20));
+    const requests = transport.requestCount();
+
+    await act(async () => {
+      const first = result.current.refresh();
+      const second = result.current.refresh();
+      await Promise.all([first, second]);
+    });
+
+    expect(transport.requestCount()).toBe(requests + 1);
+    expect(result.current.isRefreshing).toBe(false);
+  });
+
+  it("keeps the refresh error and does nothing when retrying it offline", async () => {
+    const { result, transport } = await setup({ total: 45 });
+    await waitFor(() => expect(result.current.items).toHaveLength(20));
+    transport.setFailing(true);
+    await act(async () => result.current.refresh());
+    await waitFor(() => expect(result.current.error).toBeInstanceOf(HttpError));
+    const requests = transport.requestCount();
+
+    await act(async () => {
+      onlineManager.setOnline(false);
+    });
+    await act(async () => result.current.retry());
+
+    // No request and no spinner: the UI explains the situation with `isOffline` + `error`.
+    expect(transport.requestCount()).toBe(requests);
+    expect(result.current.isRefreshing).toBe(false);
+    expect(result.current.isOffline).toBe(true);
+    expect(result.current.error).toBeInstanceOf(HttpError);
+  });
+
   it("does not hang a refresh while offline", async () => {
     const { result, transport } = await setup({ total: 45 });
     await waitFor(() => expect(result.current.items).toHaveLength(20));
@@ -195,5 +230,22 @@ describe("useMovementList", () => {
     await waitFor(() => expect(result.current.status).toBe("empty"));
     expect(transport.requestCount()).toBe(MAX_AUTO_FETCHED_PAGES);
     expect(result.current.hasNextPage).toBe(true);
+  });
+
+  it("stops auto-loading and reports an error when the page after an all-invalid one fails", async () => {
+    const { result, transport } = await setup(
+      { total: 45, failOnPage: 2 },
+      { wrapTransport: withInvalidFirstPage },
+    );
+
+    await waitFor(() => expect(result.current.status).toBe("error"));
+    expect(result.current.error).toBeInstanceOf(HttpError);
+    const requests = transport.requestCount();
+    // Let any pending effect run: a loop would issue more requests.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    expect(transport.requestCount()).toBe(requests);
+    expect(requests).toBe(2);
   });
 });

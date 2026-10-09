@@ -14,12 +14,18 @@ export interface MovementList {
 
 // Structural sharing keeps snapshots of unchanged rows referentially stable across fetches, so
 // memoising per snapshot hands the list the same `Movement` objects and memoised rows skip work.
-const revived = new WeakMap<MovementSnapshot, Movement>();
+// `null` marks a snapshot that cannot be revived.
+const revived = new WeakMap<MovementSnapshot, Movement | null>();
 
-const toMovement = (snapshot: MovementSnapshot): Movement => {
+/**
+ * Restored snapshots come from disk and are not re-validated by Zod, so a corrupted date would
+ * otherwise surface as `Invalid Date`. Such rows are dropped like any other invalid item.
+ */
+const toMovement = (snapshot: MovementSnapshot): Movement | null => {
   const cached = revived.get(snapshot);
-  if (cached) return cached;
-  const movement: Movement = { ...snapshot, date: new Date(snapshot.date) };
+  if (cached !== undefined) return cached;
+  const date = new Date(snapshot.date);
+  const movement: Movement | null = Number.isNaN(date.getTime()) ? null : { ...snapshot, date };
   revived.set(snapshot, movement);
   return movement;
 };
@@ -40,8 +46,13 @@ export const selectMovementList = (
     invalidCount += page.invalidCount;
     for (const snapshot of page.items) {
       if (seen.has(snapshot.id)) continue;
+      const movement = toMovement(snapshot);
+      if (!movement) {
+        invalidCount += 1;
+        continue;
+      }
       seen.add(snapshot.id);
-      items.push(toMovement(snapshot));
+      items.push(movement);
     }
   }
 

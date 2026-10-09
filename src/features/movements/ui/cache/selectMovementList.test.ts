@@ -59,4 +59,17 @@ describe("selectMovementList", () => {
     expect(after.items[0]).toBe(before.items[0]);
     expect(after.items[1]).toBe(before.items[1]);
   });
+
+  it("drops a restored row whose date is corrupted and counts it as invalid", () => {
+    const corrupted: MovementsPageSnapshot = {
+      items: [snapshot("a"), { ...snapshot("b"), date: "not-a-date" }, snapshot("c")],
+      nextCursor: null,
+      invalidCount: 1,
+    };
+
+    const list = selectMovementList(data(corrupted));
+
+    expect(list.items.map((item) => item.id)).toEqual(["a", "c"]);
+    expect(list.invalidCount).toBe(2);
+  });
 });
