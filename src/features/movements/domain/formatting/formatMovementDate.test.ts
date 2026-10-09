@@ -32,3 +32,21 @@ describe("formatMovementDateForAccessibility", () => {
     },
   );
 });
+
+describe("device time zone", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("follows a device time zone change instead of the zone seen on first use", () => {
+    const lateNightUtc = new Date("2026-10-07T23:30:00Z");
+    const resolvedZone = jest.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions");
+
+    resolvedZone.mockReturnValue({ timeZone: "UTC" } as Intl.ResolvedDateTimeFormatOptions);
+    expect(formatMovementDate(lateNightUtc, "es-ES")).toBe("7 oct 2026");
+
+    resolvedZone.mockReturnValue({
+      timeZone: "Europe/Madrid",
+    } as Intl.ResolvedDateTimeFormatOptions);
+    expect(formatMovementDate(lateNightUtc, "es-ES")).toBe("8 oct 2026");
+    expect(formatMovementDateForAccessibility(lateNightUtc, "en-GB")).toBe("8 October 2026");
+  });
+});

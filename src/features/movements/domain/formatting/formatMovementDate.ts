@@ -6,15 +6,22 @@ type MonthStyle = "short" | "long";
 // so formatters are memoised per locale, time zone and month style.
 const formatters = new Map<string, Intl.DateTimeFormat>();
 
-const getFormatter = (locale: string, timeZone: string | undefined, month: MonthStyle) => {
-  const key = `${locale}|${timeZone ?? ""}|${month}`;
+/**
+ * The device zone is resolved on every call, not captured by the cached formatter: a formatter
+ * built without `timeZone` would keep the zone of its first use after the user travels.
+ */
+const deviceTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+const getFormatter = (locale: string, requestedTimeZone: string | undefined, month: MonthStyle) => {
+  const timeZone = requestedTimeZone ?? deviceTimeZone();
+  const key = `${locale}|${timeZone}|${month}`;
   let formatter = formatters.get(key);
   if (!formatter) {
     formatter = new Intl.DateTimeFormat(locale, {
       day: "numeric",
       month,
       year: "numeric",
-      ...(timeZone === undefined ? {} : { timeZone }),
+      timeZone,
     });
     formatters.set(key, formatter);
   }

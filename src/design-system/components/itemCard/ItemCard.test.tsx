@@ -73,6 +73,10 @@ describe("ItemCard", () => {
   it("shows the image instead of the initials when one is provided", async () => {
     await renderCard({ leading: { imageUrl: "https://example.test/ng.png", fallbackLabel: "NG" } });
 
+    expect(screen.getByTestId("item-card-image")).toHaveProp(
+      "source",
+      expect.arrayContaining([expect.objectContaining({ uri: "https://example.test/ng.png" })]),
+    );
     expect(screen.queryByText("NG")).not.toBeOnTheScreen();
   });
 
