@@ -9,106 +9,104 @@ metadata:
 
 ## Activation Contract
 
-Load before writing hooks under `ui/hooks/`, configuring the QueryClient, or testing hooks.
+Load before writing hooks under `ui/hooks/`, touching `ui/cache/`, configuring the QueryClient or
+its persistence, or testing hooks.
+
+## Where Things Live
+
+| Concern                                          | File                                                 |
+| ------------------------------------------------ | ---------------------------------------------------- |
+| Cache constants (stale/gc/retries/persist)       | `shared/query/cachePolicy.ts` (one file, documented) |
+| Retry predicate                                  | `shared/query/shouldRetry.ts`                        |
+| App `QueryClient`                                | `shared/query/createQueryClient.ts`                  |
+| Persistence (AsyncStorage, buster, page cap)     | `shared/query/createQueryPersistOptions.ts`          |
+| AppState focus + expo-network online             | `shared/query/configureQueryManagers.ts`             |
+| Movements keys / cache snapshot / `select`       | `features/movements/ui/cache/`                       |
+| What gets persisted for the app                  | `composition/queryPersistence.ts`                    |
+| Providers wiring (persisted client, repo, theme) | `composition/AppProviders.tsx`                       |
 
 ## Query Keys Factory
 
 ```ts
-// features/movements/ui/hooks/queryKeys.ts
-export const movementKeys = {
+// features/movements/ui/cache/movementsKeys.ts
+export const movementsKeys = {
   all: ["movements"] as const,
-  lists: () => [...movementKeys.all, "list"] as const,
-  list: (params: { readonly limit: number }) => [...movementKeys.lists(), params] as const,
+  lists: () => [...movementsKeys.all, "list"] as const,
+  list: (params: { readonly limit: number }) => [...movementsKeys.lists(), params] as const,
 } as const;
 ```
 
 Never inline key arrays elsewhere.
 
-## Cache Constants
+## Cache Policy
 
-```ts
-// shared/query/cacheTimes.ts
-export const MOVEMENTS_STALE_TIME_MS = 30_000; // fresh window: no refetch
-export const MOVEMENTS_GC_TIME_MS = 10 * 60_000; // keep cached pages for instant re-entry
-export const DEFAULT_PAGE_SIZE = 20; // contract default
-```
+- `STALE_TIME_MS` 30 s; `GC_TIME_MS` = `PERSIST_MAX_AGE_MS` = 24 h (gc must be >= maxAge or
+  persisted queries are dropped early).
+- `retry: shouldRetry`: only `HttpError` with status 0 (network) or 5xx, at most 2 retries, default
+  exponential backoff. 4xx, `ContractError` and unknown errors fail immediately.
+- Focus/online: `configureQueryManagers()` (AppState → `focusManager`, expo-network →
+  `onlineManager`), called once from `AppProviders`.
 
-SWR behavior: cached pages render immediately; once stale, React Query refetches in the background
-and swaps data without a spinner. Show the skeleton only when `isPending` (no cache at all).
+SWR: cached (or restored) pages render immediately; once stale, React Query refetches in the
+background. Show the skeleton only for `status: "loading"` (no data at all).
+
+## Persistence and the Date Trap
+
+The cache is persisted to AsyncStorage as JSON (`maxAge` 24 h, `buster` = `MOVEMENTS_CACHE_VERSION`,
+only successful movements queries, only the first `MAX_PERSISTED_PAGES` page). JSON would turn
+`Movement.date` into a string on restore, so the query caches a JSON-safe **snapshot**
+(`toPageSnapshot`, ISO dates) and `selectMovementList` revives `Date`s. Bump
+`MOVEMENTS_CACHE_VERSION` whenever the contract or the snapshot shape changes.
 
 ## Infinite Query Hook
 
 ```ts
 // ui/hooks/useMovementsInfiniteQuery.ts
-export const useMovementsInfiniteQuery = (limit = DEFAULT_PAGE_SIZE) => {
-  const repository = useMovementRepository();
-  return useInfiniteQuery({
-    queryKey: movementKeys.list({ limit }),
-    queryFn: ({ pageParam }) =>
-      repository.list(pageParam ? { cursor: pageParam, limit } : { limit }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last) => last.nextCursor ?? undefined,
-    staleTime: MOVEMENTS_STALE_TIME_MS,
-    gcTime: MOVEMENTS_GC_TIME_MS,
-  });
-};
+return useInfiniteQuery({
+  queryKey: movementsKeys.list({ limit }),
+  queryFn: async ({ pageParam, signal }) =>
+    toPageSnapshot(
+      await repository.getMovements({
+        limit,
+        signal,
+        ...(typeof pageParam === "string" ? { cursor: pageParam } : {}), // restored param is null
+      }),
+    ),
+  initialPageParam: undefined as string | undefined,
+  getNextPageParam: (last) => last.nextCursor ?? undefined,
+  select: selectMovementList, // module-level: dedupes ids across pages, sums invalidCount
+});
 ```
 
-The conditional object avoids passing `cursor: undefined` under `exactOptionalPropertyTypes`.
+No `maxPages`: the contract has no previous cursor to refetch dropped pages.
 
 ## Controller Hook
 
-Adapts query state to what the view needs; keeps views dumb and testable.
+`useMovementList()` returns `{ status: "loading" | "error" | "empty" | "success", items,
+invalidCount, isRefreshing, isFetchingNextPage, hasNextPage, error, loadMore, refresh, retry }`.
 
-```ts
-// ui/hooks/useMovementListController.ts
-export const useMovementListController = () => {
-  const query = useMovementsInfiniteQuery();
-  const movements = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
-
-  const loadMore = useCallback(() => {
-    if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
-  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
-
-  return {
-    movements,
-    isInitialLoading: query.isPending,
-    isError: query.isError && movements.length === 0,
-    isRefreshing: query.isRefetching && !query.isFetchingNextPage,
-    isLoadingMore: query.isFetchingNextPage,
-    loadMore,
-    refresh: query.refetch,
-  } as const;
-};
-```
+- `error`/`empty` describe the first load only; a later failure keeps `success` and sets `error`.
+- `loadMore` is a no-op while fetching, at the end, or after a failed page (`retry` re-fetches it).
+- `refresh` trims the cache to the first page and refetches it; rows stay on screen (SWR).
 
 ## Test Wrapper
 
 ```tsx
-// shared/testing/createQueryWrapper.tsx
-export const createQueryWrapper = (repository: MovementRepository) => {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
-  });
-  const Wrapper = ({ children }: { readonly children: ReactNode }) => (
-    <QueryClientProvider client={client}>
-      <MovementRepositoryProvider value={repository}>{children}</MovementRepositoryProvider>
-    </QueryClientProvider>
-  );
-  return { client, Wrapper };
-};
+const { Wrapper } = createMovementsWrapper({ mock: { total: 45 } }); // features/movements/testing
+const { result } = await renderHook(() => useMovementList(), { wrapper: Wrapper });
+await waitFor(() => expect(result.current.items).toHaveLength(20));
+await act(async () => result.current.loadMore());
+await waitFor(() => expect(result.current.items).toHaveLength(40));
 ```
 
-```ts
-const { Wrapper } = createQueryWrapper(createMockMovementRepository({ latencyMs: 0, total: 45 }));
-const { result } = renderHook(() => useMovementListController(), { wrapper: Wrapper });
-await waitFor(() => expect(result.current.movements).toHaveLength(20));
-act(() => result.current.loadMore());
-await waitFor(() => expect(result.current.movements).toHaveLength(40));
-```
+- Real repository + mock transport (`latencyMs: 0`) + `createTestQueryClient()` (`retry: false`,
+  `gcTime: Infinity` so no gc timers keep Jest alive).
+- `createControllableHttpClient` switches failures on/off and holds requests to observe in-flight
+  states.
+- Tracked props: React Query re-renders only for result fields that were read. When testing the raw
+  query hook, read `data` in the first `waitFor`, or later updates never reach `result.current`.
 
 ## Rules
 
 - One hook per file. No `useQuery` inside presentational components.
-- `retry: false` in tests; real client keeps a small retry with backoff.
-- Errors bubble as domain errors (`InvalidPayloadError`, `NetworkError`) so the UI can branch.
+- Errors surface as `HttpError` (transport) or `ContractError` (payload) so the UI can branch.

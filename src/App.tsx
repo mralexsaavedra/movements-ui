@@ -4,7 +4,8 @@ import { Text, View } from "react-native";
 
 import { StatusBar } from "expo-status-bar";
 
-import { ThemeProvider, useTheme } from "@/design-system/theme";
+import { AppProviders } from "@/composition/AppProviders";
+import { useTheme } from "@/design-system/theme";
 
 import { style } from "./App.style";
 
@@ -24,8 +25,8 @@ function AppContent() {
 
 export function App() {
   return (
-    <ThemeProvider>
+    <AppProviders>
       <AppContent />
-    </ThemeProvider>
+    </AppProviders>
   );
 }

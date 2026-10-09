@@ -19,8 +19,9 @@ src/
 ├── features/<feature>/
 │   ├── domain/           # entities, value objects, ports, pure functions
 │   ├── infrastructure/   # dto/, schemas/, mappers/, repositories/ (http), mock/ (fake transport)
-│   └── ui/{components,hooks,views}
-├── shared/               # http/ (HttpClient port + fetch adapter), testing (cross-feature only)
+│   ├── testing/          # test-only wrappers and transports for the feature
+│   └── ui/{cache,components,hooks,providers,views}
+├── shared/               # http/ (HttpClient port + fetch adapter), query/ (client, cache policy), testing
 └── composition/          # composition root: picks adapters from env (dependencies.ts)
 ```
 
@@ -46,9 +47,10 @@ export interface MovementRepository {
 ```
 
 ```tsx
-// ui/providers/MovementRepositoryProvider.tsx
+// ui/providers/MovementRepositoryContext.ts (+ MovementRepositoryProvider.tsx)
 const MovementRepositoryContext = createContext<MovementRepository | null>(null);
 
+// ui/hooks/useMovementRepository.ts
 export const useMovementRepository = (): MovementRepository => {
   const repo = use(MovementRepositoryContext);
   if (!repo) throw new Error("MovementRepositoryProvider missing");
@@ -58,28 +60,33 @@ export const useMovementRepository = (): MovementRepository => {
 
 ## Where New Files Go
 
-| You are adding…                   | Location                                          |
-| --------------------------------- | ------------------------------------------------- |
-| Business type / rule (no I/O)     | `features/movements/domain/`                      |
-| Movement formatting (amount/date) | `features/movements/domain/formatting/`           |
-| Contract type mirroring JSON      | `features/movements/infrastructure/dto/`          |
-| Zod schema                        | `features/movements/infrastructure/schemas/`      |
-| DTO → domain conversion           | `features/movements/infrastructure/mappers/`      |
-| HTTP repository                   | `features/movements/infrastructure/repositories/` |
-| Mock transport / seeded data      | `features/movements/infrastructure/mock/`         |
-| Generic transport (HTTP client)   | `shared/http/`                                    |
-| Adapter wiring, env, console      | `composition/dependencies.ts` (composition root)  |
-| Presentational feature component  | `features/movements/ui/components/<camelName>/`   |
-| Query or controller hook          | `features/movements/ui/hooks/use<Name>.ts`        |
-| Screen                            | `features/movements/ui/views/<Name>View.tsx`      |
-| Reusable visual primitive         | `design-system/components/<camelName>/`           |
-| Cross-feature pure helper         | `shared/<area>/`                                  |
+| You are adding…                   | Location                                           |
+| --------------------------------- | -------------------------------------------------- |
+| Business type / rule (no I/O)     | `features/movements/domain/`                       |
+| Movement formatting (amount/date) | `features/movements/domain/formatting/`            |
+| Contract type mirroring JSON      | `features/movements/infrastructure/dto/`           |
+| Zod schema                        | `features/movements/infrastructure/schemas/`       |
+| DTO → domain conversion           | `features/movements/infrastructure/mappers/`       |
+| HTTP repository                   | `features/movements/infrastructure/repositories/`  |
+| Mock transport / seeded data      | `features/movements/infrastructure/mock/`          |
+| Generic transport (HTTP client)   | `shared/http/`                                     |
+| Adapter wiring, env, console      | `composition/dependencies.ts` (composition root)   |
+| App providers, cache persistence  | `composition/AppProviders.tsx`, `queryPersistence` |
+| Presentational feature component  | `features/movements/ui/components/<camelName>/`    |
+| Query or controller hook          | `features/movements/ui/hooks/use<Name>.ts`         |
+| Query keys, cache snapshot/select | `features/movements/ui/cache/`                     |
+| Context provider (DI)             | `features/movements/ui/providers/`                 |
+| Feature test helpers              | `features/movements/testing/`                      |
+| Generic React Query setup         | `shared/query/`                                    |
+| Screen                            | `features/movements/ui/views/<Name>View.tsx`       |
+| Reusable visual primitive         | `design-system/components/<camelName>/`            |
+| Cross-feature pure helper         | `shared/<area>/`                                   |
 
 ## Naming
 
 - Component folder camelCase, files PascalCase: `itemCard/ItemCard.tsx`, `ItemCard.style.ts`,
   `ItemCard.stories.tsx`, `ItemCard.test.tsx`, `index.ts` (re-export only).
-- Hooks: `useMovementsInfiniteQuery.ts` (data), `useMovementListController.ts` (UI orchestration).
+- Hooks: `useMovementsInfiniteQuery.ts` (data), `useMovementList.ts` (UI controller).
 - DTOs suffixed `Dto` (`MovementDto`); domain entities unsuffixed (`Movement`).
 - Named exports only, `import type` for types, `@/` alias for cross-folder imports.
 
