@@ -86,3 +86,9 @@ Each rule file contains:
 - Prefer explicit variants (e.g. `ItemCard` + `ItemCardSkeleton`) over a
   `loading` boolean that swaps the whole render tree.
 - Upstream source: vercel composition-patterns (MIT).
+- Design-system components stay domain-free and take view-model props (`ItemCard`: title,
+  subtitle, amount text + tone, leading, badges, attention, accessibility label). Features adapt
+  their entities with a pure mapper plus a thin wrapper (`toItemCardProps` + `MovementCard`), so
+  the mapping is unit-tested without rendering and the component is reusable.
+- Interactivity is the presence of a handler, not a boolean: `onPress` makes `ItemCard` a button;
+  without it the card is a non-pressable summary.

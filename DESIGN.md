@@ -144,8 +144,17 @@ When the OS "reduce motion" setting is on, the skeleton renders static at `opaci
             attention line (flagged only)
 ```
 
-- Leading: image, else initials from `label.name`, else a category glyph.
-- Flagged cards replace the left hairline with a thick accent border (`┃` above).
+- Leading: image, else initials (also when the image fails to load). No category glyph yet (see
+  open question 5).
+- Flagged cards replace the left hairline with a thick accent border (`┃` above); the left padding
+  shrinks by the extra width so flagged and regular rows keep their content aligned.
+- `ItemCard` (`src/design-system/components/itemCard/`) is domain-free: it takes a title, subtitle,
+  formatted amount with a tone (`positive` | `neutral` | `muted`), leading image/initials, badges,
+  an optional attention label and the accessibility label. The movements feature maps a `Movement`
+  to those props in `MovementCard` (`toItemCardProps`), so the design system never learns about
+  money directions or statuses.
+- The flag glyph is the Unicode character U+2691 (⚑), drawn as text in `itemCard.flagIconColor`;
+  no icon library is installed (open question 5).
 
 | Part      | Tokens                                                              | Rule                                 |
 | --------- | ------------------------------------------------------------------- | ------------------------------------ |
@@ -156,7 +165,12 @@ When the OS "reduce motion" setting is on, the skeleton renders static at `opaci
 | Amount    | `typography.amount`, `itemCard.amount*Color`                        | Shrinks title column, never itself   |
 | Flag      | `itemCard.flagged{AccentColor,AccentWidth}`, `itemCard.flagIcon*`   | Icon + text, not color only          |
 
-The whole card is one pressable area at least `size.touchTarget` (44) tall.
+When it has an action, the whole card is one pressable area at least `size.touchTarget` (44) tall;
+while pressed its background is `color.surface.muted`. Without an action it is not pressable.
+
+`ItemCardSkeleton` reuses the container, avatar size and text line heights, so replacing it with a
+card causes no layout shift. Its bars are font-size tall and their widths are insets derived from
+`spacing.*` and `size.listItemMin`; dedicated `skeleton.*` width tokens are a follow-up.
 
 ## 6. State matrix
 
@@ -181,10 +195,15 @@ Decisions:
 
 ## 7. Accessibility
 
-- **One element per card**: the card is `accessible` with `accessibilityRole="button"` (or
-  `"summary"` when not pressable); inner texts and the avatar are not separate stops.
+- **One element per card**: the card is `accessible` with `role="button"` (or `"summary"` when not
+  pressable) and `aria-label`; inner texts and the avatar are not separate stops.
 - **Label template**: `{direction}, {name}, {sign word} {amount spoken}, {status?}, {attention?}, {date}`
-  — e.g. "Incoming, Acme Payroll, plus 1.250,00 euros, pending, needs attention, 3 October".
+  — e.g. "Incoming, Acme Payroll, plus 1,250.00 euros, pending, needs attention, 3 October 2026" or
+  "Ingreso, Acme Payroll, más 1250,00 euros, pendiente, requiere atención, 3 de octubre de 2026".
+  Every word comes from the UI dictionaries (`src/shared/i18n/`); the currency name and the spoken
+  date come from `Intl` in the same locale, so a label never mixes languages.
+- **Skeletons** are hidden from assistive technologies (`aria-hidden`); the list announces loading
+  once.
 - **Contrast**: text ≥ 4.5:1 (WCAG 1.4.3); non-text indicators ≥ 3:1 (WCAG 1.4.11) —
   `itemCard.flaggedAccentColor` against the card and the screen background, and
   `itemCard.flagIconColor` against the card — in both themes; enforced by `buildTheme.test.ts`.
