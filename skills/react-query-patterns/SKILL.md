@@ -45,7 +45,7 @@ Never inline key arrays elsewhere.
 - `retry: shouldRetry`: only `HttpError` with status 0 (network) or 5xx, at most 2 retries, default
   exponential backoff. 4xx, `ContractError` and unknown errors fail immediately.
 - Focus/online: `configureQueryManagers()` (AppState → `focusManager`, expo-network →
-  `onlineManager`), called once from `AppProviders`.
+  `onlineManager`), called once during `AppProviders`' first render (a `useState` initializer), before any child subscribes to a query.
 
 SWR: cached (or restored) pages render immediately; once stale, React Query refetches in the
 background. Show the skeleton only for `status: "loading"` (no data at all).
@@ -87,7 +87,7 @@ invalidCount, isRefreshing, isFetchingNextPage, hasNextPage, error, loadMore, re
 
 - `error`/`empty` describe the first load only; a later failure keeps `success` and sets `error`.
 - `loadMore` is a no-op while fetching, at the end, or after a failed page (`retry` re-fetches it).
-- `refresh` trims the cache to the first page and refetches it; rows stay on screen (SWR).
+- `refresh` fetches page 1 itself and replaces the cached pages only on success; a failed refresh keeps every loaded row and exposes the error. Offline, it returns immediately and `isOffline` drives a banner.
 
 ## Test Wrapper
 
