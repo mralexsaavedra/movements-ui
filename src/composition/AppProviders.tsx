@@ -5,6 +5,7 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 
 import { ThemeProvider } from "@/design-system/theme";
 import { MovementRepositoryProvider } from "@/features/movements/ui/providers/MovementRepositoryProvider";
+import { I18nProvider } from "@/shared/i18n";
 import { configureQueryManagers } from "@/shared/query/configureQueryManagers";
 import { createQueryClient } from "@/shared/query/createQueryClient";
 
@@ -29,14 +30,16 @@ interface AppProvidersProps {
   readonly children: ReactNode;
 }
 
-/** Server-state cache (persisted across launches), injected adapters and theme. */
+/** Server-state cache (persisted across launches), injected adapters, theme and UI language. */
 export function AppProviders({ children }: AppProvidersProps) {
   const [{ queryClient, persistOptions, movementRepository }] = useState(createAppDependencies);
 
   return (
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <MovementRepositoryProvider repository={movementRepository}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <I18nProvider>{children}</I18nProvider>
+        </ThemeProvider>
       </MovementRepositoryProvider>
     </PersistQueryClientProvider>
   );

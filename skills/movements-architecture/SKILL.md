@@ -21,7 +21,7 @@ src/
 │   ├── infrastructure/   # dto/, schemas/, mappers/, repositories/ (http), mock/ (fake transport)
 │   ├── testing/          # test-only wrappers and transports for the feature
 │   └── ui/{cache,components,hooks,providers,views}
-├── shared/               # http/ (HttpClient port + fetch adapter), query/ (client, cache policy), testing
+├── shared/               # http/ (HttpClient port + fetch adapter), query/ (client, cache policy), i18n/, testing
 └── composition/          # composition root: picks adapters from env (dependencies.ts)
 ```
 
@@ -78,6 +78,7 @@ export const useMovementRepository = (): MovementRepository => {
 | Context provider (DI)             | `features/movements/ui/providers/`                 |
 | Feature test helpers              | `features/movements/testing/`                      |
 | Generic React Query setup         | `shared/query/`                                    |
+| UI copy (es/en dictionaries)      | `shared/i18n/dictionaries/`                        |
 | Screen                            | `features/movements/ui/views/<Name>View.tsx`       |
 | Reusable visual primitive         | `design-system/components/<camelName>/`            |
 | Cross-feature pure helper         | `shared/<area>/`                                   |
