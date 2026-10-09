@@ -214,7 +214,7 @@ Decisions:
 ## 8. Storybook (living spec)
 
 The stories are the executable version of the state matrix in §6: when this document and a story
-disagree, the story shows what ships. Run `pnpm storybook` (Expo with
+disagree, the story shows what ships. Run `pnpm storybook:start` (Expo with
 `EXPO_PUBLIC_STORYBOOK_ENABLED=true`) and open it in Expo Go or a dev build.
 
 | Story file                                                   | What it documents                                                        |

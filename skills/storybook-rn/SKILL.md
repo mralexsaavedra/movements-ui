@@ -30,7 +30,9 @@ ship in Expo Go. `@storybook/react-native` wants `react-native-safe-area-context
 
 ## Running
 
-- `pnpm storybook` (`:ios` / `:android`) = `EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start`.
+- `pnpm storybook:start` (`storybook:ios` / `storybook:android`) =
+  `EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start`. There is no plain `storybook` script: it would
+  shadow the `storybook` bin and `expo-doctor` fails on that conflict.
 - `pnpm start` is the app. Clear Metro's cache (`expo start -c`) if switching modes serves the
   other root.
 - **Production bundle**: with the flag off, `withStorybook` resolves `storybook`, `@storybook/*`
