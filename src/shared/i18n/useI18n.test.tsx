@@ -93,6 +93,17 @@ describe("I18nProvider time zone", () => {
   });
 });
 
+describe("I18nProvider without device calendars", () => {
+  it("falls back to the runtime's zone instead of throwing", async () => {
+    mockedUseLocales.mockReturnValue([deviceLocale("en-GB")]);
+    mockedUseCalendars.mockReturnValue([] as unknown as ReturnType<typeof useCalendars>);
+
+    const { result } = await renderHook(() => useI18n(), { wrapper: I18nProvider });
+
+    expect(result.current.timeZone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  });
+});
+
 describe("useI18n", () => {
   it("throws outside an I18nProvider", async () => {
     // React logs the render error; silence it, and restore even when the assertion fails.

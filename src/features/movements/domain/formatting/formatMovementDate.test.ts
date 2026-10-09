@@ -56,4 +56,15 @@ describe("formatter cache", () => {
 
     expect(resolvedOptions).not.toHaveBeenCalled();
   });
+
+  it("falls back to the runtime zone, once, when Intl does not know the requested zone", () => {
+    const date = new Date("2026-10-07T12:00:00Z");
+    const construct = jest.spyOn(Intl, "DateTimeFormat");
+
+    expect(formatMovementDate(date, "en-GB", "Not/AZone")).toBe("7 Oct 2026");
+    expect(formatMovementDate(date, "en-GB", "Not/AZone")).toBe("7 Oct 2026");
+
+    // One failed attempt with the unknown zone, one fallback; the second call hits the cache.
+    expect(construct).toHaveBeenCalledTimes(2);
+  });
 });

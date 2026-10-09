@@ -24,11 +24,12 @@ const fallbackTimeZone = () => {
 function DeviceI18nProvider({ children }: { readonly children: ReactNode }) {
   // Both hooks re-render when the user changes the device language or time zone.
   const locales = useLocales();
+  // Typed as non-empty, but guarded: the root provider must never throw.
   const [calendar] = useCalendars();
   const i18n = createI18n(
     resolveLanguage(locales),
     resolveFormattingLocale(locales),
-    calendar.timeZone ?? fallbackTimeZone(),
+    calendar?.timeZone ?? fallbackTimeZone(),
   );
 
   return <I18nContext value={i18n}>{children}</I18nContext>;

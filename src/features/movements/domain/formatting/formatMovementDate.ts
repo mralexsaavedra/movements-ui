@@ -11,12 +11,15 @@ const getFormatter = (locale: string, timeZone: string, month: MonthStyle) => {
   const key = `${locale}|${timeZone}|${month}`;
   let formatter = formatters.get(key);
   if (!formatter) {
-    formatter = new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-      month,
-      year: "numeric",
-      timeZone,
-    });
+    const options: Intl.DateTimeFormatOptions = { day: "numeric", month, year: "numeric" };
+    try {
+      formatter = new Intl.DateTimeFormat(locale, { ...options, timeZone });
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      // A zone this Intl build does not know: use the runtime's own zone rather than failing every
+      // row; cached under the requested key so the failed construction happens only once.
+      formatter = new Intl.DateTimeFormat(locale, options);
+    }
     formatters.set(key, formatter);
   }
   return formatter;
