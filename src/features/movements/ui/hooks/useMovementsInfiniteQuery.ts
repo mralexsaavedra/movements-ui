@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 
+import { fetchMovementsPageSnapshot } from "../cache/fetchMovementsPageSnapshot";
 import { movementsKeys } from "../cache/movementsKeys";
-import { toPageSnapshot } from "../cache/movementsPageSnapshot";
 import { selectMovementList } from "../cache/selectMovementList";
 import { useMovementRepository } from "./useMovementRepository";
 
@@ -18,15 +18,8 @@ export const useMovementsInfiniteQuery = (limit: number = MOVEMENTS_PAGE_SIZE) =
 
   return useInfiniteQuery({
     queryKey: movementsKeys.list({ limit }),
-    queryFn: async ({ pageParam, signal }) => {
-      const page = await repository.getMovements({
-        limit,
-        signal,
-        // A restored cache stores the first page param as `null` (JSON has no `undefined`).
-        ...(typeof pageParam === "string" ? { cursor: pageParam } : {}),
-      });
-      return toPageSnapshot(page);
-    },
+    queryFn: ({ pageParam, signal }) =>
+      fetchMovementsPageSnapshot(repository, { limit, pageParam, signal }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     select: selectMovementList,

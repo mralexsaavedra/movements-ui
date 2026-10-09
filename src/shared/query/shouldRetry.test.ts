@@ -1,4 +1,3 @@
-import { ContractError } from "@/features/movements/domain/ContractError";
 import { HttpError, NETWORK_ERROR_STATUS } from "@/shared/http/HttpError";
 
 import { MAX_QUERY_RETRIES } from "./cachePolicy";
@@ -16,7 +15,7 @@ describe("shouldRetry", () => {
   it.each([
     ["a 400", new HttpError(400, "bad request")],
     ["a 404", new HttpError(404, "not found")],
-    ["a contract violation", new ContractError("Invalid envelope", [])],
+    ["a non-HTTP error (e.g. a contract violation)", new TypeError("invalid payload")],
     ["an unknown error", new Error("unexpected")],
   ])("does not retry %s", (_, error) => {
     expect(shouldRetry(0, error)).toBe(false);

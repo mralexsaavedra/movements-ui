@@ -8,6 +8,8 @@ export interface MovementList {
   readonly items: readonly Movement[];
   /** Items dropped for breaking the contract, summed across loaded pages. */
   readonly invalidCount: number;
+  /** Pages loaded so far (bounds the automatic skip over pages with no valid items). */
+  readonly pageCount: number;
 }
 
 // Structural sharing keeps snapshots of unchanged rows referentially stable across fetches, so
@@ -43,5 +45,5 @@ export const selectMovementList = (
     }
   }
 
-  return { items, invalidCount };
+  return { items, invalidCount, pageCount: data.pages.length };
 };

@@ -1,27 +1,53 @@
+import { onlineManager } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 
+import type { HttpClient } from "@/shared/http/HttpClient";
 import { HttpError } from "@/shared/http/HttpError";
 
 import { createControllableHttpClient } from "../../testing/createControllableHttpClient";
 import { createMovementsWrapper } from "../../testing/createMovementsWrapper";
-import { useMovementList } from "./useMovementList";
+import { MAX_AUTO_FETCHED_PAGES, useMovementList } from "./useMovementList";
+
+/** Replaces every item of the first page with an empty (contract-violating) object. */
+const withInvalidFirstPage = (inner: HttpClient): HttpClient => ({
+  get: async (path, options) => {
+    const body = (await inner.get(path, options)) as { items: unknown[]; nextCursor: unknown };
+    return options?.query?.cursor === undefined
+      ? { ...body, items: body.items.map(() => ({})) }
+      : body;
+  },
+});
 
 const setup = async (
   options: Parameters<typeof createControllableHttpClient>[0] = {},
-  { failing = false } = {},
+  {
+    failing = false,
+    wrapTransport = (client: HttpClient) => client,
+  }: { failing?: boolean; wrapTransport?: (client: HttpClient) => HttpClient } = {},
 ) => {
   const transport = createControllableHttpClient(options);
   transport.setFailing(failing);
-  const { Wrapper } = createMovementsWrapper({ httpClient: transport.httpClient });
+  const { Wrapper } = createMovementsWrapper({ httpClient: wrapTransport(transport.httpClient) });
   const hook = await renderHook(() => useMovementList(), { wrapper: Wrapper });
   return { ...hook, transport };
 };
 
 describe("useMovementList", () => {
+  afterEach(async () => {
+    // Hooks are still mounted here (cleanup runs later), so the update goes through act.
+    await act(async () => {
+      onlineManager.setOnline(true);
+    });
+  });
+
   it("starts loading, then shows the first page", async () => {
-    const { result } = await setup({ total: 45 });
+    const transport = createControllableHttpClient({ total: 45 });
+    const release = transport.hold();
+    const { Wrapper } = createMovementsWrapper({ httpClient: transport.httpClient });
+    const { result } = await renderHook(() => useMovementList(), { wrapper: Wrapper });
 
     expect(result.current.status).toBe("loading");
+    release();
     await waitFor(() => expect(result.current.status).toBe("success"));
     expect(result.current.items).toHaveLength(20);
     expect(result.current.hasNextPage).toBe(true);
@@ -97,12 +123,11 @@ describe("useMovementList", () => {
     await waitFor(() => expect(transport.requestCount()).toBe(requests + 1));
   });
 
-  it("refreshes from the first page while keeping cached rows visible", async () => {
+  it("refreshes the first page while keeping every loaded row visible", async () => {
     const { result, transport } = await setup({ total: 45 });
     await waitFor(() => expect(result.current.items).toHaveLength(20));
     await act(async () => result.current.loadMore());
     await waitFor(() => expect(result.current.items).toHaveLength(40));
-    const firstRow = result.current.items[0];
     const release = transport.hold();
     const requests = transport.requestCount();
 
@@ -112,12 +137,59 @@ describe("useMovementList", () => {
 
     await waitFor(() => expect(result.current.isRefreshing).toBe(true));
     expect(result.current.status).toBe("success");
-    expect(result.current.items[0]).toBe(firstRow);
-    expect(result.current.items.length).toBeGreaterThan(0);
+    expect(result.current.items).toHaveLength(40);
 
     release();
     await waitFor(() => expect(result.current.isRefreshing).toBe(false));
     expect(result.current.items).toHaveLength(20);
+    expect(result.current.hasNextPage).toBe(true);
     expect(transport.requestCount()).toBe(requests + 1);
+  });
+
+  it("keeps every loaded page and exposes the error when a refresh fails", async () => {
+    const { result, transport } = await setup({ total: 45 });
+    await waitFor(() => expect(result.current.items).toHaveLength(20));
+    await act(async () => result.current.loadMore());
+    await waitFor(() => expect(result.current.items).toHaveLength(40));
+    transport.setFailing(true);
+
+    await act(async () => result.current.refresh());
+
+    expect(result.current.isRefreshing).toBe(false);
+    expect(result.current.items).toHaveLength(40);
+    expect(result.current.status).toBe("success");
+    expect(result.current.error).toBeInstanceOf(HttpError);
+  });
+
+  it("does not hang a refresh while offline", async () => {
+    const { result, transport } = await setup({ total: 45 });
+    await waitFor(() => expect(result.current.items).toHaveLength(20));
+    const requests = transport.requestCount();
+
+    await act(async () => {
+      onlineManager.setOnline(false);
+    });
+    expect(result.current.isOffline).toBe(true);
+    await act(async () => result.current.refresh());
+
+    expect(result.current.isRefreshing).toBe(false);
+    expect(result.current.items).toHaveLength(20);
+    expect(transport.requestCount()).toBe(requests);
+  });
+
+  it("keeps loading past a first page whose items were all invalid", async () => {
+    const { result } = await setup({ total: 45 }, { wrapTransport: withInvalidFirstPage });
+
+    await waitFor(() => expect(result.current.items).toHaveLength(20));
+    expect(result.current.status).toBe("success");
+    expect(result.current.invalidCount).toBe(20);
+  });
+
+  it("stops auto-loading after a bounded number of all-invalid pages", async () => {
+    const { result, transport } = await setup({ total: 200, invalidItemRate: 1 });
+
+    await waitFor(() => expect(result.current.status).toBe("empty"));
+    expect(transport.requestCount()).toBe(MAX_AUTO_FETCHED_PAGES);
+    expect(result.current.hasNextPage).toBe(true);
   });
 });
