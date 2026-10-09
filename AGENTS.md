@@ -106,7 +106,7 @@ injection (provider/context), never instantiating adapters inside components.
 - UI copy lives only in `src/shared/i18n/dictionaries/` (`en` is the type source, `es` must match
   its keys). `I18nProvider` follows the device: any Spanish locale → `es`, anything else → `en`;
   formatting keeps the device tag when it speaks the UI language (`es-MX`), else `es-ES`/`en-GB`.
-  Read copy with `useI18n().t`; tests and stories pass `value={createI18n(language, locale)}`.
+  Read copy with `useI18n().t`; tests and stories pass `value={createI18n(language, locale, timeZone)}`.
 - Component folders camelCase, files PascalCase:
   `itemCard/{ItemCard.tsx, ItemCard.style.ts, ItemCard.stories.tsx, ItemCard.test.tsx, index.ts}`.
 - One hook per file. `queryKeys` factory centralized and `as const`.
