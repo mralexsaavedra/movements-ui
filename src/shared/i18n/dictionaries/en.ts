@@ -24,6 +24,22 @@ export const en = {
       plus: "plus",
       minus: "minus",
     },
+    list: {
+      loading: "Loading movements",
+      loadingMore: "Loading more movements",
+      empty: "No movements yet",
+      endOfList: "You're all caught up",
+      loadError: "Couldn't load your movements",
+      loadErrorHint: "Check your connection and try again.",
+      updateError: "Couldn't update your movements",
+      retry: "Try again",
+      offline: "You're offline. Movements may be out of date.",
+      /** Picked with `Intl.PluralRules` for the UI locale; `{count}` is the formatted number. */
+      invalidNotice: {
+        one: "{count} movement couldn't be shown",
+        other: "{count} movements couldn't be shown",
+      },
+    },
   },
 } as const;
 
