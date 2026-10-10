@@ -6,9 +6,10 @@ on:
   pull_request:
 
 concurrency:
-  group: ci-${{ github.ref }}
-  # Superseded pull request runs are cancelled; every commit on main keeps its own result.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # Pull requests share one group per branch, so a new push cancels the superseded run. Pushes to
+  # main get one group per commit, so no commit on main loses its result.
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
