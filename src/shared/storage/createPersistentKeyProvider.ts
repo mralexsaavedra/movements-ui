@@ -29,6 +29,9 @@ const decodeKey = (stored: string | null): Uint8Array | null => {
 /**
  * Lazily reads the 256-bit key from the secret store, generating and storing one on first use.
  * The key is memoised for the app session; a failed read is not, so a later call retries.
+ * A missing or undecodable entry is replaced by a new key: anything encrypted with the old one
+ * then fails to decrypt and is dropped, which is the intended recovery for a cache. Read errors
+ * must throw (never resolve null), so a locked or unavailable store does not rotate the key.
  */
 export const createPersistentKeyProvider = ({
   secretStore,

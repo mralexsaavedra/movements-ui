@@ -20,14 +20,21 @@ const SECURE_STORE_OPTIONS: SecureStore.SecureStoreOptions = {
 /** Native CSPRNG. `getRandomBytes` is avoided: in development it may fall back to `Math.random`. */
 export const expoRandomBytes: RandomBytes = (length) => getRandomValues(new Uint8Array(length));
 
+const assertSecureStoreAvailable = async () => {
+  if (!(await SecureStore.isAvailableAsync())) throw new Error("SecureStore is unavailable");
+};
+
 export const createSecureStoreKeyProvider = (): EncryptionKeyProvider =>
   createPersistentKeyProvider({
     secretStore: {
       getItem: async (name) => {
-        if (!(await SecureStore.isAvailableAsync())) throw new Error("SecureStore is unavailable");
+        await assertSecureStoreAvailable();
         return SecureStore.getItemAsync(name, SECURE_STORE_OPTIONS);
       },
-      setItem: (name, value) => SecureStore.setItemAsync(name, value, SECURE_STORE_OPTIONS),
+      setItem: async (name, value) => {
+        await assertSecureStoreAvailable();
+        await SecureStore.setItemAsync(name, value, SECURE_STORE_OPTIONS);
+      },
     },
     keyName: CACHE_KEY_NAME,
     randomBytes: expoRandomBytes,
