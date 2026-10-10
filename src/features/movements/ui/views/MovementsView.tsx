@@ -34,7 +34,7 @@ export function MovementsView() {
         isFetchingNextPage={list.isFetchingNextPage}
         hasNextPage={list.hasNextPage}
         isOffline={list.isOffline}
-        hasError={list.error !== null}
+        error={list.error}
         onLoadMore={list.loadMore}
         onRefresh={() => void refresh()}
         onRetry={list.retry}

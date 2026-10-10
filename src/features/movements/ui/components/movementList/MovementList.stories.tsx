@@ -25,7 +25,7 @@ const meta = {
     isFetchingNextPage: false,
     hasNextPage: true,
     isOffline: false,
-    hasError: false,
+    error: null,
     onLoadMore: action("onLoadMore"),
     onRefresh: action("onRefresh"),
     onRetry: action("onRetry"),
@@ -34,6 +34,7 @@ const meta = {
     status: { options: ["loading", "error", "empty", "success"], control: { type: "radio" } },
     // Not editable on device: the JSON control would turn each `date` into a string.
     items: { control: false },
+    error: { control: false },
   },
 } satisfies Meta<typeof MovementList>;
 
@@ -47,10 +48,17 @@ export const Loading: Story = { args: { status: "loading", items: [] } };
 
 export const Empty: Story = { args: { status: "empty", items: [], hasNextPage: false } };
 
-export const LoadError: Story = { args: { status: "error", items: [], hasError: true } };
+export const LoadError: Story = {
+  args: { status: "error", items: [], error: new Error("Service unavailable") },
+};
 
 /** A refresh or next page failed: rows stay, a banner offers the retry. */
-export const UpdateError: Story = { args: { hasError: true } };
+export const UpdateError: Story = { args: { error: new Error("Service unavailable") } };
+
+/** Refreshing an empty list failed: the empty message stays, the banner offers the retry. */
+export const EmptyUpdateError: Story = {
+  args: { status: "empty", items: [], hasNextPage: false, error: new Error("Service unavailable") },
+};
 
 export const Offline: Story = { args: { isOffline: true } };
 

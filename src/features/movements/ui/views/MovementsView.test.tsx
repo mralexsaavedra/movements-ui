@@ -61,6 +61,16 @@ describe("MovementsView", () => {
     await waitFor(() => expect(transport.requestCount()).toBeGreaterThanOrEqual(2));
   });
 
+  it("refetches the first page when the user pulls to refresh", async () => {
+    const transport = await setup();
+    await findFirstRow();
+    expect(transport.requestCount()).toBe(1);
+
+    await fireEvent(screen.getByTestId("movement-list"), "refresh");
+
+    await waitFor(() => expect(transport.requestCount()).toBe(2));
+  });
+
   it("recovers from a failed first load with the retry button", async () => {
     const transport = await setup({ failing: true });
     const retry = await screen.findByRole("button", { name: "Try again" });

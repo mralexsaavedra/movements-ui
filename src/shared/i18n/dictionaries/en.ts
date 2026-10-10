@@ -34,7 +34,7 @@ export const en = {
       updateError: "Couldn't update your movements",
       retry: "Try again",
       offline: "You're offline. Movements may be out of date.",
-      /** Picked with `Intl.PluralRules` for the UI locale; `{count}` is the formatted number. */
+      /** `one` when the count is 1, `other` otherwise (see `formatCount`); `{count}` is the formatted number. */
       invalidNotice: {
         one: "{count} movement couldn't be shown",
         other: "{count} movements couldn't be shown",

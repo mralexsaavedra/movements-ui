@@ -24,6 +24,8 @@ const providers =
     </ThemeProvider>
   );
 
+const failure = () => new Error("Service unavailable (test)");
+
 const baseProps: MovementListProps = {
   status: "success",
   items: movements,
@@ -32,7 +34,7 @@ const baseProps: MovementListProps = {
   isFetchingNextPage: false,
   hasNextPage: true,
   isOffline: false,
-  hasError: false,
+  error: null,
   onLoadMore: () => undefined,
   onRefresh: () => undefined,
   onRetry: () => undefined,
@@ -47,10 +49,12 @@ const renderList = async (
     onRefresh: jest.fn(),
     onRetry: jest.fn(),
   };
-  await render(<MovementList {...baseProps} {...handlers} {...props} />, {
+  const view = await render(<MovementList {...baseProps} {...handlers} {...props} />, {
     wrapper: providers(language, locale),
   });
-  return handlers;
+  const rerender = (next: Partial<MovementListProps>) =>
+    view.rerender(<MovementList {...baseProps} {...handlers} {...props} {...next} />);
+  return { ...handlers, rerender };
 };
 
 /** Scrolls the list to its end, which is what makes FlashList report "end reached". */
@@ -90,7 +94,7 @@ describe("MovementList", () => {
   });
 
   it("shows a full-page error whose retry button calls onRetry", async () => {
-    const { onRetry } = await renderList({ status: "error", items: [], hasError: true });
+    const { onRetry } = await renderList({ status: "error", items: [], error: failure() });
 
     expect(screen.getByText("Couldn't load your movements")).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
@@ -100,13 +104,46 @@ describe("MovementList", () => {
   it("announces a load error to assistive technologies", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
 
-    await renderList({ status: "error", items: [], hasError: true });
+    await renderList({ status: "error", items: [], error: failure() });
 
     expect(announce).toHaveBeenCalledWith("Couldn't load your movements");
   });
 
+  it("announces a repeated identical failure again", async () => {
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+    const { rerender } = await renderList({ status: "error", items: [], error: failure() });
+    const firstFailureAnnouncements = announce.mock.calls.length;
+
+    await rerender({ status: "error", items: [], error: failure() });
+
+    expect(announce.mock.calls.length).toBeGreaterThan(firstFailureAnnouncements);
+    expect(announce).toHaveBeenLastCalledWith("Couldn't load your movements");
+  });
+
+  it("offers a retry when refreshing an empty list fails", async () => {
+    const { onRetry } = await renderList({
+      status: "empty",
+      items: [],
+      hasNextPage: false,
+      error: failure(),
+    });
+
+    expect(screen.getByText("No movements yet")).toBeOnTheScreen();
+    expect(screen.getByText("Couldn't update your movements")).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("forwards pull-to-refresh to onRefresh", async () => {
+    const { onRefresh } = await renderList();
+
+    await fireEvent(screen.getByTestId("movement-list"), "refresh");
+
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps the rows and offers a retry when a later fetch fails", async () => {
-    const { onRetry } = await renderList({ hasError: true });
+    const { onRetry } = await renderList({ error: failure() });
 
     expect(screen.getByText("Lumen Coffee Roasters")).toBeOnTheScreen();
     expect(screen.getByText("Couldn't update your movements")).toBeOnTheScreen();
@@ -126,6 +163,8 @@ describe("MovementList", () => {
   it.each([
     ["a page is already being fetched", { isFetchingNextPage: true }],
     ["there are no more pages", { hasNextPage: false }],
+    // After a failed page the retry banner is the only way to ask again (no retry loop).
+    ["the last fetch failed", { error: failure() }],
   ] as const)("does not ask for more when %s", async (_, props) => {
     const { onLoadMore } = await renderList({ items: pageOfMovements, ...props });
 

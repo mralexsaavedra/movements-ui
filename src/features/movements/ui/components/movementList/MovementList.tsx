@@ -26,8 +26,11 @@ export interface MovementListProps {
   readonly isFetchingNextPage: boolean;
   readonly hasNextPage: boolean;
   readonly isOffline: boolean;
-  /** The last fetch failed: a full-page error without rows, a retry banner above them otherwise. */
-  readonly hasError: boolean;
+  /**
+   * Last failure, `null` once a fetch succeeds: a full-page error without rows, a retry banner
+   * otherwise. Each failure is a new object, so a repeated identical failure is announced again.
+   */
+  readonly error: Error | null;
   readonly onLoadMore: () => void;
   readonly onRefresh: () => void;
   readonly onRetry: () => void;
@@ -68,11 +71,14 @@ function RetryButton({ label, onPress, styles, maxFontSizeMultiplier }: RetryBut
   );
 }
 
-/** Reads a message once when it appears (a load failure has no other cue for screen readers). */
-const useAnnouncement = (message: string | null) => {
+/**
+ * Reads a failure message for screen readers (it has no other cue). Keyed on the failure itself,
+ * not only the copy, so a second identical failure is announced again.
+ */
+const useFailureAnnouncement = (message: string | null, failure: Error | null) => {
   useEffect(() => {
-    if (message !== null) AccessibilityInfo.announceForAccessibility(message);
-  }, [message]);
+    if (message !== null && failure !== null) AccessibilityInfo.announceForAccessibility(message);
+  }, [message, failure]);
 };
 
 /**
@@ -88,7 +94,7 @@ export function MovementList({
   isFetchingNextPage,
   hasNextPage,
   isOffline,
-  hasError,
+  error,
   onLoadMore,
   onRefresh,
   onRetry,
@@ -98,13 +104,19 @@ export function MovementList({
   const { t, locale } = useI18n();
   const copy = t.movements.list;
   const fontScale = theme.typography.maxFontSizeMultiplier;
-  const showUpdateError = status === "success" && hasError;
+  const hasError = error !== null;
+  // Rows (or an empty list) stay on screen when a refresh or a page fails; a banner offers retry.
+  const showUpdateError = (status === "success" || status === "empty") && hasError;
 
-  useAnnouncement(status === "error" ? copy.loadError : showUpdateError ? copy.updateError : null);
+  useFailureAnnouncement(
+    status === "error" ? copy.loadError : showUpdateError ? copy.updateError : null,
+    error,
+  );
 
-  // `onEndReached` can fire repeatedly; only ask for a page that exists and is not loading.
+  // `onEndReached` can fire repeatedly; only ask for a page that exists and is not loading. After
+  // a failure the retry button is the only way to ask again, so scrolling cannot loop on errors.
   const handleEndReached = () => {
-    if (hasNextPage && !isFetchingNextPage) onLoadMore();
+    if (hasNextPage && !isFetchingNextPage && !hasError) onLoadMore();
   };
 
   const banners = (
