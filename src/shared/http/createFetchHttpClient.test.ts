@@ -1,5 +1,9 @@
-import { HttpError } from "./HttpError";
-import { type FetchFn, createFetchHttpClient } from "./createFetchHttpClient";
+import { HttpError, HttpTimeoutError, NETWORK_ERROR_STATUS } from "./HttpError";
+import {
+  DEFAULT_REQUEST_TIMEOUT_MS,
+  type FetchFn,
+  createFetchHttpClient,
+} from "./createFetchHttpClient";
 
 const jsonResponse = (body: unknown, status = 200): Response =>
   new Response(JSON.stringify(body), {
@@ -10,6 +14,21 @@ const jsonResponse = (body: unknown, status = 200): Response =>
 const createFetchStub = (response: Response | (() => Promise<Response>)) =>
   jest.fn<Promise<Response>, Parameters<FetchFn>>(() =>
     typeof response === "function" ? response() : Promise.resolve(response),
+  );
+
+const createAbortError = (): Error => Object.assign(new Error("Aborted"), { name: "AbortError" });
+
+/** A fetch that never settles on its own and rejects like `fetch` when its signal aborts. */
+const createHangingFetch = () =>
+  jest.fn<Promise<Response>, Parameters<FetchFn>>(
+    (_url, init) =>
+      new Promise<Response>((_resolve, reject) => {
+        if (init.signal?.aborted) {
+          reject(createAbortError());
+          return;
+        }
+        init.signal?.addEventListener("abort", () => reject(createAbortError()));
+      }),
   );
 
 const requestedUrl = (fetchStub: ReturnType<typeof createFetchStub>): string =>
@@ -44,14 +63,19 @@ describe("createFetchHttpClient", () => {
     expect(requestedUrl(fetchStub)).toBe("https://api.example.com/items");
   });
 
-  it("forwards the abort signal to fetch", async () => {
-    const fetchStub = createFetchStub(jsonResponse({}));
-    const client = createFetchHttpClient({ baseUrl: "https://api.example.com", fetch: fetchStub });
+  it("aborts the in-flight fetch when the caller aborts its signal", async () => {
     const controller = new AbortController();
+    let abortedDuringFetch: boolean | undefined;
+    const fetchStub = jest.fn<Promise<Response>, Parameters<FetchFn>>((_url, init) => {
+      controller.abort();
+      abortedDuringFetch = init.signal?.aborted;
+      return Promise.resolve(jsonResponse({}));
+    });
+    const client = createFetchHttpClient({ baseUrl: "https://api.example.com", fetch: fetchStub });
 
     await client.get("/items", { signal: controller.signal });
 
-    expect(fetchStub.mock.calls[0]?.[1]?.signal).toBe(controller.signal);
+    expect(abortedDuringFetch).toBe(true);
   });
 
   it.each([400, 404, 500, 503])(
@@ -118,5 +142,105 @@ describe("createFetchHttpClient", () => {
 
     expect(error).toBeInstanceOf(HttpError);
     expect((error as HttpError).status).toBe(200);
+  });
+
+  describe("request timeout", () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it("aborts the fetch and rejects with a retryable timeout error when the deadline passes", async () => {
+      const fetchStub = createHangingFetch();
+      const client = createFetchHttpClient({
+        baseUrl: "https://api.example.com",
+        fetch: fetchStub,
+        timeoutMs: 5_000,
+      });
+
+      const result = client.get("/items").catch((caught: unknown) => caught);
+      jest.advanceTimersByTime(5_000);
+      const error = await result;
+
+      expect(fetchStub.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+      expect(error).toBeInstanceOf(HttpTimeoutError);
+      expect((error as HttpError).status).toBe(NETWORK_ERROR_STATUS);
+    });
+
+    it("applies a default deadline when none is configured", async () => {
+      const client = createFetchHttpClient({
+        baseUrl: "https://api.example.com",
+        fetch: createHangingFetch(),
+      });
+
+      const result = client.get("/items").catch((caught: unknown) => caught);
+      jest.advanceTimersByTime(DEFAULT_REQUEST_TIMEOUT_MS);
+
+      await expect(result).resolves.toBeInstanceOf(HttpTimeoutError);
+    });
+
+    it("surfaces a caller abort before the deadline as an abort, not a timeout", async () => {
+      const fetchStub = createHangingFetch();
+      const client = createFetchHttpClient({
+        baseUrl: "https://api.example.com",
+        fetch: fetchStub,
+        timeoutMs: 5_000,
+      });
+      const controller = new AbortController();
+
+      const result = client
+        .get("/items", { signal: controller.signal })
+        .catch((caught: unknown) => caught);
+      jest.advanceTimersByTime(1_000);
+      controller.abort();
+      const error = await result;
+
+      expect(error).not.toBeInstanceOf(HttpError);
+      expect((error as Error).name).toBe("AbortError");
+      expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it("aborts at once when the caller signal is already aborted", async () => {
+      const fetchStub = createHangingFetch();
+      const client = createFetchHttpClient({
+        baseUrl: "https://api.example.com",
+        fetch: fetchStub,
+      });
+      const controller = new AbortController();
+      controller.abort();
+
+      const error = await client
+        .get("/items", { signal: controller.signal })
+        .catch((caught: unknown) => caught);
+
+      expect(error).not.toBeInstanceOf(HttpError);
+      expect(fetchStub.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+      expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it("clears the deadline once the request succeeds", async () => {
+      const client = createFetchHttpClient({
+        baseUrl: "https://api.example.com",
+        fetch: createFetchStub(jsonResponse({})),
+      });
+
+      await client.get("/items");
+
+      expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it("clears the deadline once the request fails", async () => {
+      const client = createFetchHttpClient({
+        baseUrl: "https://api.example.com",
+        fetch: createFetchStub(jsonResponse({}, 500)),
+      });
+
+      await client.get("/items").catch(() => undefined);
+
+      expect(jest.getTimerCount()).toBe(0);
+    });
   });
 });
