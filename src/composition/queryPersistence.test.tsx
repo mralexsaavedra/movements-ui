@@ -66,4 +66,18 @@ describe("movements cache persistence", () => {
     expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
     expect(storage.items.has(PERSISTED_CACHE_KEY)).toBe(false);
   });
+
+  it("drops a restored movements snapshot that fails validation", async () => {
+    const storage = createMemoryStorage();
+    await persistTwoPages(storage);
+    const raw = storage.items.get(PERSISTED_CACHE_KEY) ?? "";
+    // Corrupt the amount of the first stored movement.
+    storage.items.set(PERSISTED_CACHE_KEY, raw.replace(/"value":-?[\d.]+/, '"value":"oops"'));
+    expect(storage.items.get(PERSISTED_CACHE_KEY)).toContain('"value":"oops"');
+
+    const queryClient = createTestQueryClient();
+    await persistQueryClientRestore({ queryClient, ...createAppQueryPersistOptions(storage) });
+
+    expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
+  });
 });

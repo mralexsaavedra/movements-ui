@@ -19,12 +19,16 @@ const infiniteData = (pageCount: number): Pages => ({
   ),
 });
 
-const setup = (buster = "v1") => {
+const setup = (
+  buster = "v1",
+  isRestorableQuery?: (queryKey: readonly unknown[], data: unknown) => boolean,
+) => {
   const storage = createMemoryStorage();
   const options = createQueryPersistOptions({
     storage,
     buster,
     shouldPersistQuery: (query) => query.queryKey[0] === "persisted",
+    ...(isRestorableQuery ? { isRestorableQuery } : {}),
   });
   return { storage, options };
 };
@@ -91,5 +95,20 @@ describe("createQueryPersistOptions", () => {
 
     expect(restored.getQueryData(["persisted", "a"])).toBeUndefined();
     expect(storage.items.has(PERSISTED_CACHE_KEY)).toBe(false);
+  });
+
+  it("drops restored queries the restore check rejects and keeps the rest", async () => {
+    const { options } = setup("v1", (queryKey, data) => queryKey[1] !== "checked" || data === "ok");
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(["persisted", "checked", 1], "corrupt");
+    queryClient.setQueryData(["persisted", "checked", 2], "ok");
+    queryClient.setQueryData(["persisted", "other"], "untouched");
+
+    await save(queryClient, options);
+    const restored = await restoreInto(options);
+
+    expect(restored.getQueryState(["persisted", "checked", 1])).toBeUndefined();
+    expect(restored.getQueryData(["persisted", "checked", 2])).toBe("ok");
+    expect(restored.getQueryData(["persisted", "other"])).toBe("untouched");
   });
 });
