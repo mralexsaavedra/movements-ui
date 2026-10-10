@@ -1,5 +1,6 @@
 import type { AsyncStorage } from "@tanstack/react-query-persist-client";
 
+import { isRestorableMovementsQuery } from "@/features/movements/ui/cache/isRestorableMovementsQuery";
 import { isMovementsQueryKey } from "@/features/movements/ui/cache/movementsKeys";
 import { MOVEMENTS_CACHE_VERSION } from "@/features/movements/ui/cache/movementsPageSnapshot";
 import {
@@ -9,7 +10,7 @@ import {
 
 /**
  * Persists the movements list across launches so the screen paints instantly from disk while
- * fresh data loads. The data is stored unencrypted: encrypting cached financial data at rest is a
+ * fresh data loads. Restored movements snapshots are validated and dropped when invalid. The data is stored unencrypted: encrypting cached financial data at rest is a
  * production follow-up (see README).
  */
 export const createAppQueryPersistOptions = (storage: AsyncStorage<string>): QueryPersistOptions =>
@@ -17,4 +18,5 @@ export const createAppQueryPersistOptions = (storage: AsyncStorage<string>): Que
     storage,
     buster: MOVEMENTS_CACHE_VERSION,
     shouldPersistQuery: (query) => isMovementsQueryKey(query.queryKey),
+    isRestorableQuery: isRestorableMovementsQuery,
   });

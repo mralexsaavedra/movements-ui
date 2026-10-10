@@ -18,8 +18,9 @@ export interface MovementList {
 const revived = new WeakMap<MovementSnapshot, Movement | null>();
 
 /**
- * Restored snapshots come from disk and are not re-validated by Zod, so a corrupted date would
- * otherwise surface as `Invalid Date`. Such rows are dropped like any other invalid item.
+ * Restored snapshots are validated against the snapshot schema before they reach the cache
+ * (`isRestorableMovementsQuery`); this cheap date check is a last guard so an `Invalid Date` can
+ * never reach the UI. Such rows are dropped like any other invalid item.
  */
 const toMovement = (snapshot: MovementSnapshot): Movement | null => {
   const cached = revived.get(snapshot);

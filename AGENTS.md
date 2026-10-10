@@ -141,9 +141,9 @@ injection (provider/context), never instantiating adapters inside components.
 - React Query provides stale-while-revalidate: cached data renders instantly, refetch in background.
   Cache policy constants live in `src/shared/query/cachePolicy.ts`; retries only for network/5xx.
 - The query cache is persisted to AsyncStorage (24 h, first page only, successful movements
-  queries). It stores a JSON-safe snapshot (ISO dates) revived in `select`; bump
-  `MOVEMENTS_CACHE_VERSION` when the contract or snapshot shape changes. Not encrypted yet
-  (production follow-up).
+  queries). It stores a JSON-safe snapshot (ISO dates), validated with Zod on restore (invalid →
+  dropped) and revived in `select`; bump `MOVEMENTS_CACHE_VERSION` when the contract or snapshot
+  shape changes. Not encrypted yet (production follow-up).
 
 ## Testing Criteria
 
