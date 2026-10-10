@@ -16,5 +16,12 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "index.ts", "expo-env.d.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".rnstorybook/**/*.ts",
+    ".rnstorybook/**/*.tsx",
+    "index.ts",
+    "expo-env.d.ts"
+  ]
 }

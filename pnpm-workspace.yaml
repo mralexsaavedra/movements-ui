@@ -18,3 +18,7 @@ minimumReleaseAgeExclude:
   - expo-modules-core@57.0.21
   - expo@57.0.27
 nodeLinker: hoisted
+# esbuild (pulled in by Storybook's config loader) ships its binary through optional platform
+# packages, so its postinstall check is not needed.
+allowBuilds:
+  esbuild: false

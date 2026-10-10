@@ -51,21 +51,22 @@ Generic Expo skills come from the `expo@claude-plugins-official` plugin enabled 
 
 Always add native-aware deps with `npx expo install <pkg>` (resolves SDK-compatible versions), never plain `pnpm add` for Expo/RN packages.
 
-| Task          | Command                                          | Status     |
-| ------------- | ------------------------------------------------ | ---------- |
-| Install       | `pnpm install`                                   | ready      |
-| Start         | `pnpm start` (`expo start`)                      | ready      |
-| iOS / Android | `pnpm ios` / `pnpm android`                      | ready      |
-| Lint          | `pnpm lint` (`oxlint`)                           | ready      |
-| Format        | `pnpm format` / `pnpm format:check` (Prettier)   | ready      |
-| Typecheck     | `pnpm typecheck` (`tsc --noEmit`)                | ready      |
-| Tokens        | `pnpm tokens` / `pnpm tokens:check`              | ready      |
-| Test          | `pnpm test` / `pnpm test:watch` / `pnpm test:ci` | ready      |
-| Storybook     | `pnpm storybook`                                 | TODO (T07) |
-| E2E           | `pnpm e2e` (`maestro test e2e/`)                 | TODO (T09) |
-| Doctor        | `npx expo-doctor`                                | ready      |
+| Task          | Command                                                                                   | Status     |
+| ------------- | ----------------------------------------------------------------------------------------- | ---------- |
+| Install       | `pnpm install`                                                                            | ready      |
+| Start         | `pnpm start` (`expo start`)                                                               | ready      |
+| iOS / Android | `pnpm ios` / `pnpm android`                                                               | ready      |
+| Lint          | `pnpm lint` (`oxlint`)                                                                    | ready      |
+| Format        | `pnpm format` / `pnpm format:check` (Prettier)                                            | ready      |
+| Typecheck     | `pnpm typecheck` (`tsc --noEmit`)                                                         | ready      |
+| Tokens        | `pnpm tokens` / `pnpm tokens:check`                                                       | ready      |
+| Test          | `pnpm test` / `pnpm test:watch` / `pnpm test:ci`                                          | ready      |
+| Storybook     | `pnpm storybook:start` / `storybook:ios` / `storybook:android`, `pnpm storybook:generate` | ready      |
+| E2E           | `pnpm e2e` (`maestro test e2e/`)                                                          | TODO (T09) |
+| Doctor        | `npx expo-doctor`                                                                         | ready      |
 
-Run lint, typecheck and tests before declaring any task done. Husky runs lint-staged on
+Storybook only reaches the bundle when `EXPO_PUBLIC_STORYBOOK_ENABLED=true` (see
+`skills/storybook-rn/SKILL.md`). Run lint, typecheck and tests before declaring any task done. Husky runs lint-staged on
 pre-commit and `pnpm tokens:check && pnpm typecheck && pnpm test:ci` on pre-push.
 
 ## Architecture
