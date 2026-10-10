@@ -83,7 +83,7 @@ const useFailureAnnouncement = (message: string | null, failure: Error | null) =
 
 /**
  * Virtualized, paginated list of movements (FlashList, recycled rows). Presentational: the state
- * and actions come from `useMovementList` through `MovementsScreen`. Swapping the list engine for
+ * and actions come from `useMovementList` through `MovementsView`. Swapping the list engine for
  * FlatList only touches this file.
  */
 export function MovementList({
