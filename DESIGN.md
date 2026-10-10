@@ -202,8 +202,10 @@ Decisions:
   "Ingreso, Acme Payroll, más 1250,00 euros, pendiente, requiere atención, 3 de octubre de 2026".
   Every word comes from the UI dictionaries (`src/shared/i18n/`); the currency name and the spoken
   date come from `Intl` in the same locale, so a label never mixes languages.
-- **Skeletons** are hidden from assistive technologies (`aria-hidden`); the list announces loading
-  once.
+- **Skeletons** are hidden from assistive technologies (`aria-hidden`); while the first page loads
+  the list exposes one "Loading movements" element (`aria-busy`) instead of six empty rows.
+- **Failures** have no other cue for screen-reader users, so `MovementList` announces load and
+  update errors (`AccessibilityInfo.announceForAccessibility`), again for a repeated failure.
 - **Contrast**: text ≥ 4.5:1 (WCAG 1.4.3); non-text indicators ≥ 3:1 (WCAG 1.4.11) —
   `itemCard.flaggedAccentColor` against the card and the screen background, and
   `itemCard.flagIconColor` against the card — in both themes; enforced by `buildTheme.test.ts`.
@@ -217,12 +219,13 @@ The stories are the executable version of the state matrix in §6: when this doc
 disagree, the story shows what ships. Run `pnpm storybook:start` (Expo with
 `EXPO_PUBLIC_STORYBOOK_ENABLED=true`) and open it in Expo Go or a dev build.
 
-| Story file                                                   | What it documents                                                        |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| `design-system/components/itemCard/ItemCard`                 | Every §6 state from plain props, broken image, press action, `AllStates` |
-| `design-system/components/itemCard/ItemCardSkeleton`         | Loading row, single and a list of six                                    |
-| `design-system/components/badge/Badge`                       | Each tone                                                                |
-| `features/movements/ui/components/movementCard/MovementCard` | Contract fixtures through the mapper, Spanish and English galleries      |
+| Story file                                                   | What it documents                                                                                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `design-system/components/itemCard/ItemCard`                 | Every §6 state from plain props, broken image, press action, `AllStates`                                                              |
+| `design-system/components/itemCard/ItemCardSkeleton`         | Loading row, single and a list of six                                                                                                 |
+| `design-system/components/badge/Badge`                       | Each tone                                                                                                                             |
+| `features/movements/ui/components/movementCard/MovementCard` | Contract fixtures through the mapper, Spanish and English galleries                                                                   |
+| `features/movements/ui/components/movementList/MovementList` | Success, Loading, Empty, LoadError, UpdateError, EmptyUpdateError, Offline, InvalidMovements, FetchingNextPage, EndOfList, Refreshing |
 
 Every story has **Theme** (light/dark) and **Language** (es/en) controls from the global decorator
 (`src/storybook/withProviders.tsx`); dates use the fixed `Europe/Madrid` zone so they read the same
