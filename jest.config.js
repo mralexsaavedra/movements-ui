@@ -4,6 +4,8 @@ module.exports = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
+  // Mocks FlashList's layout measurements so list tests mount real rows (see the file).
+  setupFiles: ["<rootDir>/jest.setup.ts"],
   testPathIgnorePatterns: ["/node_modules/", "<rootDir>/e2e/"],
   // Only packages that ship untranspiled ESM/Flow and are actually installed here.
   // `nodeLinker: hoisted` places them at the top of node_modules, so the `.pnpm`

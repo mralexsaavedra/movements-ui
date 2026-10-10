@@ -40,7 +40,7 @@ Generic Expo skills come from the `expo@claude-plugins-official` plugin enabled 
 | Language        | TypeScript strict (see `tsconfig.json`)                     |
 | Server state    | TanStack React Query v5 (`useInfiniteQuery`, cursor)        |
 | Validation      | Zod at the infrastructure boundary                          |
-| Lists           | FlashList vs FlatList — **open decision**, record in README |
+| Lists           | FlashList v2 behind `MovementList` (FlatList swap = 1 file) |
 | Tests           | Jest (`jest-expo`) + `@testing-library/react-native` v14    |
 | E2E             | Maestro (`e2e/`)                                            |
 | Docs            | Storybook for React Native                                  |
