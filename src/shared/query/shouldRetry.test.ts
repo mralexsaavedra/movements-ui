@@ -1,4 +1,4 @@
-import { HttpError, NETWORK_ERROR_STATUS } from "@/shared/http/HttpError";
+import { HttpError, HttpTimeoutError, NETWORK_ERROR_STATUS } from "@/shared/http/HttpError";
 
 import { MAX_QUERY_RETRIES } from "./cachePolicy";
 import { shouldRetry } from "./shouldRetry";
@@ -6,6 +6,7 @@ import { shouldRetry } from "./shouldRetry";
 describe("shouldRetry", () => {
   it.each([
     ["a network failure", new HttpError(NETWORK_ERROR_STATUS, "offline")],
+    ["a request timeout", new HttpTimeoutError(10_000)],
     ["a 500", new HttpError(500, "boom")],
     ["a 503", new HttpError(503, "unavailable")],
   ])("retries %s", (_, error) => {
