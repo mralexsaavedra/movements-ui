@@ -90,7 +90,7 @@ src/
 │           ├── hooks/       # query hooks + controller hooks
 │           ├── providers/   # repository context (dependency injection)
 │           └── views/       # screens composing hooks + components
-├── shared/              # cross-feature utils (http/ client port + fetch, query/ cache policy, i18n/, testing)
+├── shared/              # cross-feature utils (http/ client port + fetch, query/ cache policy, storage/ encryption, i18n/, testing)
 └── composition/         # composition root: adapters from EXPO_PUBLIC_API_* env, AppProviders
 ```
 
@@ -143,7 +143,9 @@ injection (provider/context), never instantiating adapters inside components.
 - The query cache is persisted to AsyncStorage (24 h, first page only, successful movements
   queries). It stores a JSON-safe snapshot (ISO dates), validated with Zod on restore (invalid →
   dropped) and revived in `select`; bump `MOVEMENTS_CACHE_VERSION` when the contract or snapshot
-  shape changes. Not encrypted yet (production follow-up).
+  shape changes. The stored value is encrypted with AES-256-GCM (`src/shared/storage/`, key in
+  `expo-secure-store`, wired in `src/composition/cacheEncryption.ts`); undecryptable data is
+  dropped and nothing is persisted without a key.
 
 ## Testing Criteria
 
