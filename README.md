@@ -137,7 +137,8 @@ no snapshots).
 | Catalog   | `src/storybook/stories.test.tsx` renders every story in light/Spanish and dark/English, asserts it is not empty, and fails on any `console.error`                                                                                                                         | Stories cannot silently rot; the catalog doubles as a broad smoke test       |
 
 Husky runs lint-staged (oxlint, Prettier, token check) on commit and `tokens:check`, typecheck and
-`test:ci` on push.
+`test:ci` on push. GitHub Actions (`.github/workflows/ci.yml`) runs lint, format, token check,
+typecheck and tests on every pull request and on `main`.
 
 ### E2E: not included yet
 
@@ -165,7 +166,7 @@ rounds and this README). This is an approximation from commit times, not tracked
 | Typed DTOs, Zod validation, seeded mock             | Dark mode with contrast tests                              |
 | Stale-while-revalidate with React Query             | Persisted first page across launches                       |
 | Logic, component and hook tests                     | Offline banner, invalid-item notice, failure announcements |
-|                                                     | Husky + lint-staged hooks acting as local CI               |
+|                                                     | Git hooks plus a GitHub Actions pipeline                   |
 
 ## Known limitations and next steps
 
@@ -175,7 +176,6 @@ rounds and this README). This is an approximation from commit times, not tracked
 - **Request timeout.** The fetch adapter has no timeout of its own; it relies on cancellation
   through React Query's `AbortSignal`.
 - **E2E** with Maestro (plan above).
-- **CI.** Checks run only in local Git hooks; a hosted pipeline (lint, typecheck, test) is pending.
 - **Manual device pass.** Performance with the 5,000-row mock (JS FPS, blank cells) has not been
   measured on a device or dev build, so no numbers are claimed.
 - **Design questions** (currency display, relative dates, flagged semantics, icon set) are listed
