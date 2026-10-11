@@ -42,7 +42,7 @@ Generic Expo skills come from the `expo@claude-plugins-official` plugin enabled 
 | Validation      | Zod at the infrastructure boundary                          |
 | Lists           | FlashList v2 behind `MovementList` (FlatList swap = 1 file) |
 | Tests           | Jest (`jest-expo`) + `@testing-library/react-native` v14    |
-| E2E             | Maestro (`e2e/`)                                            |
+| E2E             | Maestro (planned, not implemented; plan in README)          |
 | Docs            | Storybook for React Native                                  |
 | Package manager | pnpm 11 (`packageManager` pin, `nodeLinker: hoisted`)       |
 | Lint / format   | oxlint + Prettier, Husky + lint-staged                      |
@@ -51,19 +51,18 @@ Generic Expo skills come from the `expo@claude-plugins-official` plugin enabled 
 
 Always add native-aware deps with `npx expo install <pkg>` (resolves SDK-compatible versions), never plain `pnpm add` for Expo/RN packages.
 
-| Task          | Command                                                                                   | Status     |
-| ------------- | ----------------------------------------------------------------------------------------- | ---------- |
-| Install       | `pnpm install`                                                                            | ready      |
-| Start         | `pnpm start` (`expo start`)                                                               | ready      |
-| iOS / Android | `pnpm ios` / `pnpm android`                                                               | ready      |
-| Lint          | `pnpm lint` (`oxlint`)                                                                    | ready      |
-| Format        | `pnpm format` / `pnpm format:check` (Prettier)                                            | ready      |
-| Typecheck     | `pnpm typecheck` (`tsc --noEmit`)                                                         | ready      |
-| Tokens        | `pnpm tokens` / `pnpm tokens:check`                                                       | ready      |
-| Test          | `pnpm test` / `pnpm test:watch` / `pnpm test:ci`                                          | ready      |
-| Storybook     | `pnpm storybook:start` / `storybook:ios` / `storybook:android`, `pnpm storybook:generate` | ready      |
-| E2E           | `pnpm e2e` (`maestro test e2e/`)                                                          | TODO (T09) |
-| Doctor        | `npx expo-doctor`                                                                         | ready      |
+| Task          | Command                                                                                   | Status |
+| ------------- | ----------------------------------------------------------------------------------------- | ------ |
+| Install       | `pnpm install`                                                                            | ready  |
+| Start         | `pnpm start` (`expo start`)                                                               | ready  |
+| iOS / Android | `pnpm ios` / `pnpm android`                                                               | ready  |
+| Lint          | `pnpm lint` (`oxlint`)                                                                    | ready  |
+| Format        | `pnpm format` / `pnpm format:check` (Prettier)                                            | ready  |
+| Typecheck     | `pnpm typecheck` (`tsc --noEmit`)                                                         | ready  |
+| Tokens        | `pnpm tokens` / `pnpm tokens:check`                                                       | ready  |
+| Test          | `pnpm test` / `pnpm test:watch` / `pnpm test:ci`                                          | ready  |
+| Storybook     | `pnpm storybook:start` / `storybook:ios` / `storybook:android`, `pnpm storybook:generate` | ready  |
+| Doctor        | `npx expo-doctor`                                                                         | ready  |
 
 Storybook only reaches the bundle when `EXPO_PUBLIC_STORYBOOK_ENABLED=true` (see
 `skills/storybook-rn/SKILL.md`). Run lint, typecheck and tests before declaring any task done. Husky runs lint-staged on
@@ -154,7 +153,8 @@ Test behavior that can break and matters to users, not implementation details.
 - **Logic (required)**: amount formatting by type/currency, Zod payload validation, mappers.
 - **Component (required)**: `ItemCard` states rendered and accessible (query by role/label/text).
 - **Hooks**: pagination/next-cursor behavior with a QueryClient wrapper (`retry: false`).
-- **E2E (bonus)**: Maestro flow — list loads, scrolls, paginates.
+- **E2E (bonus)**: not implemented; the Maestro flow (list loads, scrolls, paginates, error
+  recovery) is documented as a plan in the README.
 - Tests are colocated `*.test.ts(x)`. No snapshot spam. Deterministic data only.
 - RNTL v14 APIs (`render`, `renderHook`, `fireEvent`, `act`) are async: always `await` them.
   Before writing or changing RNTL tests, read the package docs for the installed version in
