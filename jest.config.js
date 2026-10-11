@@ -13,8 +13,9 @@ module.exports = {
   // paths live under node_modules/.pnpm/<pkg>@<ver>/node_modules/<pkg>) is not needed.
   // Add a package here only when a test fails with a "SyntaxError: Cannot use import".
   transformIgnorePatterns: [
-    // `storybook` and `@storybook/*` ship ESM only (portable stories in `src/storybook/stories.test.tsx`).
-    "/node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|storybook/|@storybook/))",
+    // `storybook` and `@storybook/*` ship ESM only (portable stories in `src/storybook/stories.test.tsx`);
+    // so does `@noble/ciphers` (cache encryption in `src/shared/storage/`).
+    "/node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|storybook/|@storybook/|@noble/ciphers/))",
     // Kept from jest-expo's defaults: the RN babel preset is part of the transformer itself.
     "/node_modules/@react-native/babel-preset/",
   ],

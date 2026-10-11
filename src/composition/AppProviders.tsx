@@ -9,6 +9,11 @@ import { I18nProvider } from "@/shared/i18n";
 import { configureQueryManagers } from "@/shared/query/configureQueryManagers";
 import { createQueryClient } from "@/shared/query/createQueryClient";
 
+import {
+  createSecureStoreKeyProvider,
+  expoRandomBytes,
+  reportCacheEncryptionFailure,
+} from "./cacheEncryption";
 import { createMovementRepository } from "./dependencies";
 import { createAppQueryPersistOptions } from "./queryPersistence";
 
@@ -21,7 +26,12 @@ const createAppDependencies = () => {
   configureQueryManagers();
   return {
     queryClient: createQueryClient(),
-    persistOptions: createAppQueryPersistOptions(AsyncStorage),
+    persistOptions: createAppQueryPersistOptions({
+      storage: AsyncStorage,
+      keyProvider: createSecureStoreKeyProvider(),
+      randomBytes: expoRandomBytes,
+      onError: reportCacheEncryptionFailure,
+    }),
     movementRepository: createMovementRepository(),
   };
 };

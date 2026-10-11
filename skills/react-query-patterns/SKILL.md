@@ -56,7 +56,9 @@ The cache is persisted to AsyncStorage as JSON (`maxAge` 24 h, `buster` = `MOVEM
 only successful movements queries, only the first `MAX_PERSISTED_PAGES` page). JSON would turn
 `Movement.date` into a string on restore, so the query caches a JSON-safe **snapshot**
 (`toPageSnapshot`, ISO dates) and `selectMovementList` revives `Date`s. Bump
-`MOVEMENTS_CACHE_VERSION` whenever the contract or the snapshot shape changes.
+`MOVEMENTS_CACHE_VERSION` whenever the contract or the snapshot shape changes. Restored snapshots
+are Zod-validated before hydration (invalid → dropped), and the stored string is encrypted with
+AES-256-GCM (`src/shared/storage/`, key in SecureStore); an undecryptable value is treated as no cache.
 
 ## Infinite Query Hook
 
