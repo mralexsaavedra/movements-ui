@@ -15,7 +15,7 @@ import { ItemCard, type ItemCardProps } from "./ItemCard";
 const outbound: ItemCardProps = {
   title: "Lumen Coffee Roasters",
   subtitle: "Food & drink · 7 Oct 2026",
-  amount: { text: "−42.90 €", tone: "neutral" },
+  amount: { text: "−€42.90", tone: "neutral" },
   // Seeded placeholder image so the catalog shows the image state (needs network on device).
   leading: { imageUrl: "https://picsum.photos/seed/lumen/96", fallbackLabel: "LC" },
   accessibilityLabel: "Outgoing, Lumen Coffee Roasters, minus 42.90 euros, 7 October 2026",
@@ -49,7 +49,7 @@ export const Inbound: Story = {
   args: {
     title: "Northwind Payroll",
     subtitle: "Salary · 6 Oct 2026",
-    amount: { text: "+12,345.50 €", tone: "positive" },
+    amount: { text: "+€12,345.50", tone: "positive" },
     leading: { imageUrl: null, fallbackLabel: "NP" },
     accessibilityLabel: "Incoming, Northwind Payroll, plus 12,345.50 euros, 6 October 2026",
   },
@@ -61,7 +61,7 @@ export const Outbound: Story = {
 
 export const Pending: Story = {
   args: {
-    amount: { text: "−42.90 €", tone: "muted" },
+    amount: { text: "−€42.90", tone: "muted" },
     badges: [PENDING_BADGE],
     accessibilityLabel:
       "Outgoing, Lumen Coffee Roasters, minus 42.90 euros, pending, 7 October 2026",
@@ -93,7 +93,7 @@ export const LongText: Story = {
   args: {
     title: "Kiyomizu Ramen House & Late Night Noodle Bar Shinjuku Station East Exit",
     subtitle: "Travel and international dining expenses · 4 Oct 2026",
-    amount: { text: "−¥3,500", tone: "neutral" },
+    amount: { text: "−JP¥3,500", tone: "neutral" },
     leading: { imageUrl: null, fallbackLabel: "KR" },
     accessibilityLabel:
       "Outgoing, Kiyomizu Ramen House & Late Night Noodle Bar Shinjuku Station East Exit, minus 3,500 yen, 4 October 2026",
