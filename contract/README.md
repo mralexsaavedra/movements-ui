@@ -54,8 +54,12 @@ contract bugs.
 
 - Dataset: generated once per client from a seed (mulberry32 PRNG, no dependency). Same seed,
   same items. Default 5,000 contract-valid movements, newest first, ~30% inbound, pending only
-  among the most recent, ~5% flagged, some without image, a few very long names, mostly EUR
-  plus USD/GBP/JPY/CHF. Merchants and people are fictional.
+  among the most recent, ~5% flagged (the third row always is, so the state shows without
+  scrolling), a few very long names, mostly EUR plus USD/GBP/JPY/CHF. Merchants and people are
+  fictional.
+- Logos: seeded placeholder photos (`picsum.photos`, so the app needs network to show them);
+  some rows have no image, and one merchant uses the reserved `.invalid` domain so its logo
+  always fails and the initials fallback is visible. Offline, every logo falls back to initials.
 - Pagination: `limit` defaults to 20 and is clamped to 100; a non-positive or non-integer
   `limit` is a 400. `nextCursor` is `null` on the last page.
 - Cursor: the mock happens to encode an offset (base64), but **clients must treat cursors as
