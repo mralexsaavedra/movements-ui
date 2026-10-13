@@ -9,13 +9,25 @@ interface Counterparty {
   readonly min: number;
   readonly max: number;
   readonly logo: boolean;
+  /** Serves a logo URL that never resolves, to exercise the image error fallback. */
+  readonly brokenLogo?: true;
 }
 
 const MERCHANTS: readonly (readonly [Counterparty, number])[] = [
   [{ name: "Lumen Coffee Roasters", category: "Food & drink", min: 2, max: 12, logo: true }, 14],
   [{ name: "Harbor & Vine Market", category: "Groceries", min: 15, max: 180, logo: true }, 14],
   [{ name: "Saffron Street Kitchen", category: "Food & drink", min: 12, max: 70, logo: true }, 8],
-  [{ name: "Orbit Streaming Co.", category: "Subscriptions", min: 8, max: 20, logo: true }, 5],
+  [
+    {
+      name: "Orbit Streaming Co.",
+      category: "Subscriptions",
+      min: 8,
+      max: 20,
+      logo: true,
+      brokenLogo: true,
+    },
+    5,
+  ],
   [{ name: "Cobalt Mobility", category: "Transport", min: 3, max: 45, logo: true }, 9],
   [{ name: "Quill & Ledger Books", category: "Shopping", min: 10, max: 60, logo: false }, 5],
   [{ name: "Brightwater Utilities", category: "Utilities", min: 40, max: 160, logo: false }, 3],
@@ -96,6 +108,18 @@ const pickCounterparty = (random: Random, type: ItemTypeDto): Counterparty => {
   return pickWeighted(random, type === "inbound" ? INCOME : MERCHANTS);
 };
 
+/**
+ * Demo logos: seeded placeholder photos so the app shows real images; `brokenLogo` uses the
+ * reserved `.invalid` TLD (RFC 2606), which never resolves, so the initials fallback shows too.
+ */
+const logoUrl = (counterparty: Counterparty): string =>
+  counterparty.brokenLogo
+    ? `https://logos.invalid/merchants/${slugify(counterparty.name)}.png`
+    : `https://picsum.photos/seed/${slugify(counterparty.name)}/96`;
+
+/** Index forced to `flagged` so the attention state is visible without scrolling. */
+const SHOWCASE_FLAGGED_INDEX = 2;
+
 const roundTo = (value: number, decimals: number): number => {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
@@ -134,13 +158,12 @@ export const generateItemDtos = ({
       },
       label: {
         name: counterparty.name,
-        imageUrl: hasImage
-          ? `https://images.example.com/merchants/${slugify(counterparty.name)}.png`
-          : null,
+        imageUrl: hasImage ? logoUrl(counterparty) : null,
       },
       category: counterparty.category,
       date: new Date(time).toISOString(),
-      flagged: chance(random, FLAGGED_SHARE),
+      // Draw first so forcing the showcase row does not shift the rest of the seeded stream.
+      flagged: chance(random, FLAGGED_SHARE) || index === SHOWCASE_FLAGGED_INDEX,
     });
 
     // Whole seconds keep the ISO strings short and the order strictly descending.

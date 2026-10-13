@@ -62,6 +62,27 @@ describe("generateItemDtos", () => {
     expect(share((item) => item.flagged)).toBeLessThan(0.1);
   });
 
+  it("serves real, reachable logos so the image path is visible in the app", () => {
+    const urls = generateItemDtos({ seed: 42, total: 200 })
+      .map((item) => item.label.imageUrl)
+      .filter((url): url is string => url !== null);
+
+    expect(urls.some((url) => url.startsWith("https://picsum.photos/seed/"))).toBe(true);
+    expect(urls.some((url) => url.includes("images.example.com"))).toBe(false);
+  });
+
+  it("includes logos on the reserved .invalid domain to exercise the image error fallback", () => {
+    const urls = generateItemDtos({ seed: 42, total: 200 }).map((item) => item.label.imageUrl);
+
+    expect(urls.some((url) => url?.includes(".invalid/"))).toBe(true);
+  });
+
+  it("shows a flagged movement on the first screen", () => {
+    const firstPage = generateItemDtos({ seed: 42, total: 20 });
+
+    expect(firstPage.slice(0, 5).some((item) => item.flagged)).toBe(true);
+  });
+
   it("returns an empty dataset when total is 0", () => {
     expect(generateItemDtos({ seed: 42, total: 0 })).toEqual([]);
   });
