@@ -1,5 +1,6 @@
-import { Text } from "react-native";
+import { Platform, Text } from "react-native";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { focusManager, onlineManager } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react-native";
 
@@ -35,5 +36,33 @@ describe("AppProviders", () => {
 
     expect(screen.getByText("child")).toBeOnTheScreen();
     expect(configuredAtChildRender[0]).toBe(true);
+  });
+
+  it("restores the persisted cache on native platforms", async () => {
+    jest.mocked(AsyncStorage.getItem).mockClear();
+
+    await render(
+      <AppProviders>
+        <Text>child</Text>
+      </AppProviders>,
+    );
+
+    expect(AsyncStorage.getItem).toHaveBeenCalled();
+  });
+
+  it("keeps the cache in memory on the web, where there is no secure key store", async () => {
+    jest.replaceProperty(Platform, "OS", "web");
+    jest.mocked(AsyncStorage.getItem).mockClear();
+    jest.mocked(AsyncStorage.setItem).mockClear();
+
+    await render(
+      <AppProviders>
+        <Text>child</Text>
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("child")).toBeOnTheScreen();
+    expect(AsyncStorage.getItem).not.toHaveBeenCalled();
+    expect(AsyncStorage.setItem).not.toHaveBeenCalled();
   });
 });

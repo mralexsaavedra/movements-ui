@@ -1,6 +1,9 @@
 import { type ReactNode, useState } from "react";
 
+import { Platform } from "react-native";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 
 import { ThemeProvider } from "@/design-system/theme";
@@ -26,12 +29,17 @@ const createAppDependencies = () => {
   configureQueryManagers();
   return {
     queryClient: createQueryClient(),
-    persistOptions: createAppQueryPersistOptions({
-      storage: AsyncStorage,
-      keyProvider: createSecureStoreKeyProvider(),
-      randomBytes: expoRandomBytes,
-      onError: reportCacheEncryptionFailure,
-    }),
+    // The web has no secure key store for the cache key, so the cache stays in memory there
+    // instead of failing (and warning) on every write.
+    persistOptions:
+      Platform.OS === "web"
+        ? null
+        : createAppQueryPersistOptions({
+            storage: AsyncStorage,
+            keyProvider: createSecureStoreKeyProvider(),
+            randomBytes: expoRandomBytes,
+            onError: reportCacheEncryptionFailure,
+          }),
     movementRepository: createMovementRepository(),
   };
 };
@@ -40,17 +48,23 @@ interface AppProvidersProps {
   readonly children: ReactNode;
 }
 
-/** Server-state cache (persisted across launches), injected adapters, theme and UI language. */
+/** Server-state cache (persisted across launches on native), injected adapters, theme and UI language. */
 export function AppProviders({ children }: AppProvidersProps) {
   const [{ queryClient, persistOptions, movementRepository }] = useState(createAppDependencies);
 
-  return (
+  const app = (
+    <MovementRepositoryProvider repository={movementRepository}>
+      <ThemeProvider>
+        <I18nProvider>{children}</I18nProvider>
+      </ThemeProvider>
+    </MovementRepositoryProvider>
+  );
+
+  return persistOptions ? (
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
-      <MovementRepositoryProvider repository={movementRepository}>
-        <ThemeProvider>
-          <I18nProvider>{children}</I18nProvider>
-        </ThemeProvider>
-      </MovementRepositoryProvider>
+      {app}
     </PersistQueryClientProvider>
+  ) : (
+    <QueryClientProvider client={queryClient}>{app}</QueryClientProvider>
   );
 }
