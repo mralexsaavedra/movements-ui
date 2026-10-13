@@ -21,7 +21,6 @@
     "src/**/*.tsx",
     ".rnstorybook/**/*.ts",
     ".rnstorybook/**/*.tsx",
-    "index.ts",
-    "expo-env.d.ts"
+    "index.ts"
   ]
 }
