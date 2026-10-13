@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { Animated, View } from "react-native";
+import { Animated, Platform, View } from "react-native";
 
 import { useReduceMotion } from "@/design-system/components/motion/useReduceMotion";
 import { useTheme } from "@/design-system/theme";
 
 import { style } from "./ItemCardSkeleton.style";
+
+// The web build has no native animated module; RN Web runs the same animation in JS.
+const USE_NATIVE_DRIVER = Platform.OS !== "web";
 
 export interface ItemCardSkeletonProps {
   readonly testID?: string;
@@ -33,12 +36,12 @@ export function ItemCardSkeleton({ testID }: ItemCardSkeletonProps) {
         Animated.timing(opacity, {
           toValue: opacityMin,
           duration: halfPulse,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
         Animated.timing(opacity, {
           toValue: opacityMax,
           duration: halfPulse,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
       ]),
     );

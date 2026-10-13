@@ -16,11 +16,17 @@ pnpm install
 pnpm start          # Expo dev server; press i / a, or scan the QR code with Expo Go
 pnpm ios            # same, opening the iOS simulator
 pnpm android        # same, opening the Android emulator
+pnpm web            # same, in the browser (react-native-web)
 ```
 
 The app runs against an in-process mock backend by default, so no server or network is needed.
 Every native module in use (FlashList, Reanimated, AsyncStorage, `expo-image`, `expo-localization`,
 `expo-network`, and the Storybook peers) ships in Expo Go, so a dev build is not required.
+
+The same code also runs on the web through `react-native-web`. Two native-only behaviours
+degrade gracefully there: the query cache stays in memory (it is not persisted), because `expo-secure-store` has
+no web implementation to hold the encryption key; and there is no
+pull-to-refresh gesture (the list still revalidates when the tab regains focus).
 
 | Task                   | Command                                                           |
 | ---------------------- | ----------------------------------------------------------------- |
