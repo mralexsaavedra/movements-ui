@@ -1,6 +1,6 @@
 ---
 name: rn-testing
-description: "Trigger: write test, unit test, component test, hook test, jest, jest-expo, React Native Testing Library, RNTL, Maestro, E2E. Testing criteria and patterns for movements-ui."
+description: "Trigger: write test, unit test, component test, hook test, jest, jest-expo, React Native Testing Library, RNTL, Detox, Playwright, E2E. Testing criteria and patterns for movements-ui."
 license: MIT
 metadata:
   author: alexander-saavedra
@@ -87,21 +87,35 @@ it("falls back to initials when there is no image", async () => {
 Use `await renderHook(...)` + `createQueryWrapper` (see `react-query-patterns`), mock repository with
 `latencyMs: 0`, assert via `waitFor`.
 
-## Maestro E2E
+## E2E (planned): Detox + Playwright
 
-Flows live in `e2e/` as YAML, one user journey per file, selectors by text or accessibility label.
+One TypeScript layer, two runners: Detox drives iOS/Android, Playwright drives the web build.
+`react-native-web` renders `testID` as `data-testid`, so the same IDs work in both.
 
-```yaml
-# e2e/movements-list.yaml
-appId: com.example.movementsui
----
-- launchApp
-- assertVisible: "Movements"
-- scrollUntilVisible:
-    element: { id: "movement-item-45" }
-    direction: DOWN
-- assertVisible: { id: "movement-item-45" }
+```ts
+// e2e/shared/testIds.ts — the only place E2E selectors are defined
+export const testIds = {
+  movementList: "movement-list",
+  movement: (id: string) => `movement-${id}`,
+} as const;
+
+// e2e/shared/driver.ts — what a scenario may do; each runner implements it
+export interface Driver {
+  tap(testId: string): Promise<void>;
+  scrollUntilVisible(listId: string, testId: string): Promise<void>;
+  expectVisible(testId: string): Promise<void>;
+  readonly supportsPullToRefresh: boolean;
+}
+
+// e2e/shared/scenarios/paginates.ts — written once, run by both adapters
+export const paginates = async (driver: Driver) => {
+  await driver.expectVisible(testIds.movementList);
+  await driver.scrollUntilVisible(testIds.movementList, testIds.movement("mv-000045"));
+};
 ```
 
-Run: `maestro test e2e/`. Requires a dev build on a simulator. If not delivered, document the plan
-in README (flows, devices, CI integration).
+`movement-list` exists today (`MovementList.tsx`); per-row IDs such as `movement-<id>` must be added
+when the E2E suite lands. Adapters: `e2e/detox/` maps the driver to `element(by.id(...))`, `e2e/playwright/` to
+`page.getByTestId(...)`. Skip platform-only steps by capability, never by `if (web)` in scenarios.
+Detox needs a development build (not Expo Go); validate `@config-plugins/detox` on the current SDK.
+If not delivered, keep the plan in the README (flows, devices, CI integration).
