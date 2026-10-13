@@ -148,8 +148,19 @@ typecheck and tests on every pull request and on `main`.
 
 ### E2E: not included yet
 
-An E2E suite (Maestro) was deliberately left out to spend the time on the core parts. The first
-flow would cover:
+An E2E suite was deliberately left out to spend the time on the core parts. The plan is **Detox**
+on iOS/Android and **Playwright** on the web, sharing one TypeScript layer instead of a
+YAML-only tool such as Maestro:
+
+- **Shared selectors.** `react-native-web` renders `testID` as `data-testid`, so one constants file
+  of test IDs serves Detox `by.id()` and Playwright `getByTestId()`.
+- **Shared scenarios.** Each flow is written once against a small driver interface (`tap`,
+  `scroll`, `pullToRefresh`, `expectVisible`), with a Detox adapter and a Playwright adapter.
+  Platform-only steps (pull to refresh has no web gesture) are skipped by capability.
+- **Cost.** Detox needs a development build, not Expo Go, and the community config plugin
+  (`@config-plugins/detox`) still declares Expo 53 as its peer, so it must be validated on SDK 57.
+
+The first flows would cover:
 
 - App launches against the mock and the first page of movements is visible.
 - Scrolling to the bottom loads the next page (the mock serves 5,000 rows) and the end-of-list
@@ -176,7 +187,7 @@ rounds and this README). This is an approximation from commit times, not tracked
 
 ## Known limitations and next steps
 
-- **E2E** with Maestro (plan above).
+- **E2E** with Detox (mobile) and Playwright (web) sharing test IDs and scenarios (plan above).
 - **Manual device pass.** Performance with the 5,000-row mock (JS FPS, blank cells) has not been
   measured on a device or dev build, so no numbers are claimed.
 - **Design questions** (currency display, relative dates, flagged semantics, icon set) are listed

@@ -18,7 +18,7 @@ Project skills live in `skills/` and are linked into `.claude/skills/` by `./ski
 | design-tokens          | design tokens, theme, colors, spacing, `X.style.ts`, adding a token, hardcoded value           | `skills/design-tokens/SKILL.md`          |
 | api-contract           | OpenAPI contract, DTO, Zod schema, payload validation, mapper, mock adapter, repository port   | `skills/api-contract/SKILL.md`           |
 | react-query-patterns   | React Query, useInfiniteQuery, queryKeys, cache, staleTime, SWR, controller hook, test wrapper | `skills/react-query-patterns/SKILL.md`   |
-| rn-testing             | unit/component/hook tests, jest-expo, RNTL, Maestro, E2E                                       | `skills/rn-testing/SKILL.md`             |
+| rn-testing             | unit/component/hook tests, jest-expo, RNTL, Detox, Playwright, E2E                             | `skills/rn-testing/SKILL.md`             |
 | storybook-rn           | Storybook, stories, component states, decorators, args                                         | `skills/storybook-rn/SKILL.md`           |
 | rn-list-performance    | FlatList/FlashList, virtualization, infinite scroll, pagination, pull to refresh, skeleton     | `skills/rn-list-performance/SKILL.md`    |
 | composition-patterns   | compound components, boolean prop proliferation, component API design (vercel, MIT)            | `skills/composition-patterns/SKILL.md`   |

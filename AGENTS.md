@@ -34,18 +34,18 @@ Generic Expo skills come from the `expo@claude-plugins-official` plugin enabled 
 
 ## Stack
 
-| Concern         | Choice                                                      |
-| --------------- | ----------------------------------------------------------- |
-| Runtime         | Expo SDK 57, React 19.2, React Native 0.86                  |
-| Language        | TypeScript strict (see `tsconfig.json`)                     |
-| Server state    | TanStack React Query v5 (`useInfiniteQuery`, cursor)        |
-| Validation      | Zod at the infrastructure boundary                          |
-| Lists           | FlashList v2 behind `MovementList` (FlatList swap = 1 file) |
-| Tests           | Jest (`jest-expo`) + `@testing-library/react-native` v14    |
-| E2E             | Maestro (planned, not implemented; plan in README)          |
-| Docs            | Storybook for React Native                                  |
-| Package manager | pnpm 11 (`packageManager` pin, `nodeLinker: hoisted`)       |
-| Lint / format   | oxlint + Prettier, Husky + lint-staged                      |
+| Concern         | Choice                                                        |
+| --------------- | ------------------------------------------------------------- |
+| Runtime         | Expo SDK 57, React 19.2, React Native 0.86                    |
+| Language        | TypeScript strict (see `tsconfig.json`)                       |
+| Server state    | TanStack React Query v5 (`useInfiniteQuery`, cursor)          |
+| Validation      | Zod at the infrastructure boundary                            |
+| Lists           | FlashList v2 behind `MovementList` (FlatList swap = 1 file)   |
+| Tests           | Jest (`jest-expo`) + `@testing-library/react-native` v14      |
+| E2E             | Detox + Playwright (planned, not implemented; plan in README) |
+| Docs            | Storybook for React Native                                    |
+| Package manager | pnpm 11 (`packageManager` pin, `nodeLinker: hoisted`)         |
+| Lint / format   | oxlint + Prettier, Husky + lint-staged                        |
 
 ## Commands
 
@@ -153,8 +153,8 @@ Test behavior that can break and matters to users, not implementation details.
 - **Logic (required)**: amount formatting by type/currency, Zod payload validation, mappers.
 - **Component (required)**: `ItemCard` states rendered and accessible (query by role/label/text).
 - **Hooks**: pagination/next-cursor behavior with a QueryClient wrapper (`retry: false`).
-- **E2E (bonus)**: not implemented; the Maestro flow (list loads, scrolls, paginates, error
-  recovery) is documented as a plan in the README.
+- **E2E (bonus)**: not implemented; the plan (Detox on mobile, Playwright on web, sharing test IDs
+  and scenarios through one driver interface) is documented in the README.
 - Tests are colocated `*.test.ts(x)`. No snapshot spam. Deterministic data only.
 - RNTL v14 APIs (`render`, `renderHook`, `fireEvent`, `act`) are async: always `await` them.
   Before writing or changing RNTL tests, read the package docs for the installed version in
@@ -184,7 +184,7 @@ Load the matching `SKILL.md` BEFORE acting. Run `./skills/setup.sh` to link them
 | Adding/using tokens, theme, writing `X.style.ts`             | `skills/design-tokens/SKILL.md`              |
 | DTO types, Zod schemas, mappers, mock adapter, repository    | `skills/api-contract/SKILL.md`               |
 | Query keys, infinite queries, cache config, controller hooks | `skills/react-query-patterns/SKILL.md`       |
-| Writing unit/component/hook tests, Maestro flows             | `skills/rn-testing/SKILL.md`                 |
+| Writing unit/component/hook tests, E2E flows                 | `skills/rn-testing/SKILL.md`                 |
 | Writing or updating stories                                  | `skills/storybook-rn/SKILL.md`               |
 | List virtualization, pagination, scroll performance          | `skills/rn-list-performance/SKILL.md`        |
 | Component API design, variants, compound components          | `skills/composition-patterns/SKILL.md`       |
