@@ -7,6 +7,27 @@ documented in Storybook, a virtualized and paginated list, an OpenAPI contract c
 typed DTOs, runtime validation, a seeded mock backend and a stale-while-revalidate cache, and a
 test suite focused on what can break for users.
 
+## Screenshots
+
+Same code on iOS, Android and web. Language and number formatting follow the device (Spanish on
+iOS, English on Android); dark mode is a second token set.
+
+|                                             iOS · light · es-ES                                             |                                          iOS · dark                                           |                                                  Android · en-GB                                                  |
+| :---------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
+| <img src="docs/screenshots/ios-light.png" alt="Movement list on iOS in light mode, in Spanish" width="240"> | <img src="docs/screenshots/ios-dark.png" alt="Movement list on iOS in dark mode" width="240"> | <img src="docs/screenshots/android-en.png" alt="Movement list on Android with the device in English" width="220"> |
+
+<img src="docs/screenshots/web-desktop.png" alt="The app in a desktop browser through react-native-web" width="600">
+
+|                                                      Pull to refresh (rows stay visible)                                                       |                                 Long scroll with cursor pagination                                 |                                                                   ItemCard · all states (Storybook)                                                                    |
+| :--------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| <img src="docs/screenshots/pull-to-refresh.gif" alt="Pull to refresh on Android: the spinner appears and the list keeps its rows" width="220"> | <img src="docs/screenshots/scroll-pagination.gif" alt="Fast scroll loading new pages" width="220"> | <img src="docs/screenshots/itemcard-all-states.png" alt="ItemCard gallery: inbound, outbound, pending, flagged, long text, no image and other currencies" width="220"> |
+
+States you will not see with the healthy mock, documented as Storybook stories:
+
+|                                               First load fails                                               |                                                             Refresh fails                                                             |                                               Offline                                                |                                                     Invalid items dropped                                                     |
+| :----------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------: |
+| <img src="docs/screenshots/storybook-load-error.png" alt="First-page error with a retry button" width="180"> | <img src="docs/screenshots/storybook-update-error.png" alt="Failed refresh: a notice on top while the rows stay visible" width="180"> | <img src="docs/screenshots/storybook-offline.png" alt="Offline banner over cached rows" width="180"> | <img src="docs/screenshots/storybook-invalid-movements.png" alt="Notice that three movements could not be shown" width="180"> |
+
 ## Quick start
 
 Requirements: Node, pnpm 11 (pinned in `packageManager`), and Expo Go or an iOS/Android simulator.
