@@ -10,6 +10,7 @@ import { toMovement } from "@/features/movements/infrastructure/mappers/toMoveme
 import { generateItemDtos } from "@/features/movements/infrastructure/mock/generateItemDtos";
 import { I18nProvider, type Language, createI18n } from "@/shared/i18n";
 
+import { waitForListLayout } from "../../../testing/waitForListLayout";
 import { MovementList, type MovementListProps } from "./MovementList";
 
 const movements = itemDtos.map(toMovement);
@@ -52,6 +53,7 @@ const renderList = async (
   const view = await render(<MovementList {...baseProps} {...handlers} {...props} />, {
     wrapper: providers(language, locale),
   });
+  await waitForListLayout();
   const rerender = (next: Partial<MovementListProps>) =>
     view.rerender(<MovementList {...baseProps} {...handlers} {...props} {...next} />);
   return { ...handlers, rerender };

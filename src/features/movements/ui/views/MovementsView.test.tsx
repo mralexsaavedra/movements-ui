@@ -7,17 +7,24 @@ import { I18nProvider, createI18n } from "@/shared/i18n";
 
 import { createControllableHttpClient } from "../../testing/createControllableHttpClient";
 import { createMovementsWrapper } from "../../testing/createMovementsWrapper";
+import { waitForListLayout } from "../../testing/waitForListLayout";
 import { MovementsView } from "./MovementsView";
 
 const TOTAL = 45;
 const [firstDto] = generateItemDtos({ seed: DEFAULT_SEED, total: TOTAL });
 /** Merchants repeat across the seeded dataset, so the first row's name may appear more than once. */
-const findFirstRow = async () => (await screen.findAllByText(firstDto!.label.name))[0];
+const findFirstRow = async () => {
+  const [row] = await screen.findAllByText(firstDto!.label.name);
+  // The rows just mounted the list: let it finish its first layout inside act.
+  await waitForListLayout();
+  return row;
+};
 
 /** The real repository (validation + mapping) over the seeded mock transport, in English. */
-const setup = async ({ failing = false } = {}) => {
+const setup = async ({ failing = false, held = false } = {}) => {
   const transport = createControllableHttpClient({ total: TOTAL });
   transport.setFailing(failing);
+  const release = held ? transport.hold() : () => undefined;
   const { Wrapper } = createMovementsWrapper({ httpClient: transport.httpClient });
 
   await render(
@@ -28,7 +35,7 @@ const setup = async ({ failing = false } = {}) => {
     </ThemeProvider>,
     { wrapper: Wrapper },
   );
-  return transport;
+  return { ...transport, release };
 };
 
 const scrollToEnd = async () => {
@@ -43,9 +50,11 @@ const scrollToEnd = async () => {
 
 describe("MovementsView", () => {
   it("shows the loading placeholder, then the first page", async () => {
-    await setup();
+    // Held: a zero-latency first page could otherwise arrive before the first assertion.
+    const { release } = await setup({ held: true });
 
     expect(screen.getByLabelText("Loading movements")).toBeOnTheScreen();
+    release();
     expect(await findFirstRow()).toBeOnTheScreen();
   });
 
