@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { act, renderHook, waitFor } from "@testing-library/react-native";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react-native";
 
 import type { HttpClient } from "@/shared/http/HttpClient";
 import { HttpError } from "@/shared/http/HttpError";
@@ -35,10 +35,10 @@ const setup = async (
 describe("useMovementList", () => {
   afterEach(async () => {
     jest.restoreAllMocks();
-    // Hooks are still mounted here (cleanup runs later), so the update goes through act.
-    await act(async () => {
-      onlineManager.setOnline(true);
-    });
+    // Unmount before going back online: with hooks still mounted, reconnecting refetches the
+    // list, and that refetch settles after the test (an update outside act).
+    await cleanup();
+    onlineManager.setOnline(true);
   });
 
   it("starts loading, then shows the first page", async () => {
